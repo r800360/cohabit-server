@@ -7,10 +7,11 @@ exports.auth = exports.db = void 0;
 const dotenv_1 = __importDefault(require("dotenv"));
 const firebase_admin_1 = __importDefault(require("firebase-admin"));
 dotenv_1.default.config();
+const { myPrivateKey } = JSON.parse(process.env.PRIVATE_KEY);
 const myServiceAccount = {
     projectId: process.env.PROJECT_ID,
     clientEmail: process.env.CLIENT_EMAIL,
-    privateKey: process.env.PRIVATE_KEY
+    privateKey: myPrivateKey
 };
 if (!firebase_admin_1.default.apps.length) {
     firebase_admin_1.default.initializeApp({

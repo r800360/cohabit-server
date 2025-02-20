@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 import express, { Express, NextFunction, Request, Response } from "express";
 import { isHttpError } from "http-errors";
 
-// import userRoutes from "./routes/user";
+import userRoutes from "./routes/user";
 
 
 dotenv.config();
@@ -24,7 +24,7 @@ app.get("/tick", (req: Request, res: Response) => {
 });
 
 
-// app.use("/api/users", userRoutes);
+app.use("/api/users", userRoutes);
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
 app.use((error: unknown, req: Request, res: Response, next: NextFunction) => {

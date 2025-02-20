@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 import express, { Express, NextFunction, Request, Response } from "express";
 import { isHttpError } from "http-errors";
 
-import userRoutes from "./routes/user";
+// import userRoutes from "./routes/user";
 
 
 dotenv.config();

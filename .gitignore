@@ -4,3 +4,4 @@ serviceAccountKey.json
 __tests__/
 node_modules/
 .env
+archive/

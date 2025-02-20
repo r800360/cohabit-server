@@ -7,6 +7,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const dotenv_1 = __importDefault(require("dotenv"));
 const express_1 = __importDefault(require("express"));
 const http_errors_1 = require("http-errors");
+// import userRoutes from "./routes/user";
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const port = (_a = process.env.PORT) !== null && _a !== void 0 ? _a : 5000;

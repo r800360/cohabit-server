@@ -1,0 +1,6 @@
+# Contains our secrets for Firebase
+firebaseConfig.ts
+serviceAccountKey.json
+__tests__/
+node_modules/
+.env

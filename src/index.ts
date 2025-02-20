@@ -19,7 +19,7 @@ app.get("/", (req: Request, res: Response) => {
   res.send("Express + TypeScript Server");
 });
 
-app.use("/api/users", userRoutes);
+// app.use("/api/users", userRoutes);
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
 app.use((error: unknown, req: Request, res: Response, next: NextFunction) => {

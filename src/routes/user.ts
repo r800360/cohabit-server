@@ -1,9 +1,10 @@
 import express from "express";
-import { checkUserExists, createUser } from "../controllers/user";
+
+import * as UserController from "../controllers/user";
 
 const router = express.Router();
 
-router.post("/check", checkUserExists);
-router.post("/signup", createUser);
+router.post("/check", UserController.checkUserExists);
+router.post("/signup", UserController.createUser);
 
 export default router;

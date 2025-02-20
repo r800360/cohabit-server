@@ -2,22 +2,32 @@
     "name": "backend",
     "version": "1.0.0",
     "description": "",
-    "main": "index.ts",
+    "main": "src/index.ts",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
-        "start": "nodemon index.ts",
+        "start": "nodemon src/index.ts",
         "check-git-hooks": "cd .. && node .secret-scan/secret-scan.js -- --check-git-hooks",
         "format": "npm run check-git-hooks && prettier --write .",
         "lint-fix": "npm run check-git-hooks && (eslint --fix --cache --report-unused-disable-directives . || true) && prettier --write .",
         "lint-check": "npm run check-git-hooks && eslint --cache --report-unused-disable-directives . && prettier --check .",
-        "prepare": "cd .. && husky"
+        "prepare": "cd .. && husky",
+        "build": "rimraf dist && tsc",
+        "ts.check": "tsc --project tsconfig.json",
+        "add-build": "git add dist"
     },
+    "pre-commit": [
+        "ts.check",
+        "build",
+        "add-build"
+    ],
     "author": "",
     "license": "ISC",
     "dependencies": {
         "dotenv": "^16.4.7",
         "express": "^4.21.2",
         "express-validator": "^7.2.1",
+        "pre-commit": "^1.2.2",
+        "rimraf": "^6.0.1",
         "supertest": "^7.0.0"
     },
     "devDependencies": {
@@ -25,7 +35,6 @@
         "@eslint/js": "^9.17.0",
         "@types/express": "^5.0.0",
         "@types/jest": "^29.5.14",
-        "@types/mocha": "^10.0.10",
         "@types/node": "^22.13.4",
         "@typescript-eslint/eslint-plugin": "^8.19.0",
         "@typescript-eslint/parser": "^8.19.0",

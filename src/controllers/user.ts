@@ -7,31 +7,40 @@ export const checkUserExists = async (req: Request, res: Response) => {
   const snapshot = await userRef.get();
 
   if (!snapshot.empty) {
-    return res.status(200).json({ exists: true });
+    res.status(200).json({ exists: true });
+    return;
   } else {
-    return res.status(404).json({ exists: false });
+    res.status(404).json({ exists: false });
+    return;
   }
 };
 
 export const createUser = async (req: Request, res: Response) => {
-  const { firebaseId, name, email } = req.body;
-  if (!email.endsWith("@ucsd.edu")) {
-    return res.status(403).json({ message: "Only UCSD emails allowed" });
+  try {
+    const { firebaseId, name, email } = req.body;
+    if (!email.endsWith("@ucsd.edu")) {
+      res.status(403).json({ message: "Only UCSD emails allowed" });
+      return;
+    }
+
+    const userDoc = db.collection("users").doc(firebaseId);
+    await userDoc.set({
+      firebaseId,
+      name,
+      email,
+      friendList: [],
+      habitList: [],
+      courseList: [],
+      blockedList: [],
+      focusGroups: [],
+    });
+
+    res.status(201).json({ message: "User created successfully" });
+    return;
+  } catch (error) {
+    console.error("Error creating user:", error);
+    res.status(500).json({ error: "Internal server error create user" });
   }
-
-  const userDoc = db.collection("users").doc(firebaseId);
-  await userDoc.set({
-    firebaseId,
-    name,
-    email,
-    friendList: [],
-    habitList: [],
-    courseList: [],
-    blockedList: [],
-    focusGroups: [],
-  });
-
-  return res.status(201).json({ message: "User created successfully" });
 };
 
 export const deleteUser = async (req: Request, res: Response) => {
@@ -50,6 +59,6 @@ export const deleteUser = async (req: Request, res: Response) => {
 
     return res.status(200).json({ message: "User deleted successfully" });
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: "Error in deleting user!" });
   }
 };

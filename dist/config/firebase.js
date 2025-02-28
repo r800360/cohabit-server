@@ -7,6 +7,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.auth = exports.db = void 0;
 const dotenv_1 = __importDefault(require("dotenv"));
 const firebase_admin_1 = __importDefault(require("firebase-admin"));
+// const express = require('express');
+// const session = require('express-session');
+// const { google } = require('googleapis');
+// const crypto = require('crypto');
 dotenv_1.default.config();
 // const { myPrivateKey } = JSON.parse(process.env.PRIVATE_KEY);
 const myServiceAccount = {

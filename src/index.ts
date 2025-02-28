@@ -1,8 +1,10 @@
 import dotenv from "dotenv";
 import express, { Express, NextFunction, Request, Response } from "express";
 import { isHttpError } from "http-errors";
-
+import session from "express-session";
 import userRoutes from "./routes/user";
+import crypto from "crypto";
+import authRoutes from "./routes/auth";
 
 
 dotenv.config();
@@ -15,6 +17,13 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(express.json());
 
+// Express session
+app.use(session({
+  secret: process.env.CLIENT_SECRET || crypto.randomBytes(32).toString('hex'),
+  resave: false,
+  saveUninitialized: true
+}));
+
 app.get("/", (req: Request, res: Response) => {
   res.send("Express + TypeScript Server");
 });
@@ -25,6 +34,8 @@ app.get("/tick", (req: Request, res: Response) => {
 
 
 app.use("/api/users", userRoutes);
+app.use("/api", authRoutes);
+
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
 app.use((error: unknown, req: Request, res: Response, next: NextFunction) => {

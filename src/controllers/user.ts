@@ -1,6 +1,15 @@
 import { Request, Response } from "express";
 import { db, auth } from "../config/firebase";
 
+export const debugRoute = async (req: Request, res: Response) => {
+  try {
+    const snapshot = await db.collection("users").limit(1).get();
+    res.json({ success: true, count: snapshot.size });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
 export const checkUserExists = async (req: Request, res: Response) => {
   const { email } = req.body;
   const userRef = db.collection("users").where("email", "==", email);

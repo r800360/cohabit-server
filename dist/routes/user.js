@@ -41,5 +41,6 @@ const UserController = __importStar(require("../controllers/user"));
 const router = express_1.default.Router();
 router.post("/check", UserController.checkUserExists);
 router.post("/signup", UserController.createUser);
+router.get("/test-db", UserController.debugRoute);
 exports.default = router;
 //# sourceMappingURL=user.js.map

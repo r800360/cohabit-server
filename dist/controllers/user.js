@@ -9,8 +9,18 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteUser = exports.createUser = exports.checkUserExists = void 0;
+exports.deleteUser = exports.createUser = exports.checkUserExists = exports.debugRoute = void 0;
 const firebase_1 = require("../config/firebase");
+const debugRoute = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const snapshot = yield firebase_1.db.collection("users").limit(1).get();
+        res.json({ success: true, count: snapshot.size });
+    }
+    catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+exports.debugRoute = debugRoute;
 const checkUserExists = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email } = req.body;
     const userRef = firebase_1.db.collection("users").where("email", "==", email);

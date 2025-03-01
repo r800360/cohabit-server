@@ -22,25 +22,25 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 function checkTokenType(token) {
     var _a, _b;
     if (!token) {
-        console.log("Invalid Token: Empty or Undefined");
+        console.error("Invalid Token: Empty or Undefined");
         return;
     }
     const decoded = jsonwebtoken_1.default.decode(token, { complete: true });
     if (!decoded || !decoded.payload) {
-        console.log("Invalid Token: Could not decode");
+        console.error("Invalid Token: Could not decode");
         return;
     }
     const payload = decoded.payload;
-    console.log("Decoded Header:", decoded.header);
-    console.log("Decoded Payload:", payload);
+    console.error("Decoded Header:", decoded.header);
+    console.error("Decoded Payload:", payload);
     if ((_a = payload.iss) === null || _a === void 0 ? void 0 : _a.includes("accounts.google.com")) {
-        console.log("This is a Google ID Token.");
+        console.error("This is a Google ID Token.");
     }
     else if ((_b = payload.iss) === null || _b === void 0 ? void 0 : _b.includes("securetoken.google.com")) {
-        console.log("This is a Firebase ID Token.");
+        console.error("This is a Firebase ID Token.");
     }
     else {
-        console.log("Unknown Token Type.");
+        console.error("Unknown Token Type.");
     }
 }
 // // Example usage
@@ -48,6 +48,7 @@ function checkTokenType(token) {
 // checkTokenType(token);
 const validateGoogleAuthToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { idToken } = req.body;
+    checkTokenType(idToken);
     try {
         // Verify the ID token and extract user information
         const decodedToken = yield firebase_1.auth.verifyIdToken(idToken);
@@ -60,7 +61,6 @@ const validateGoogleAuthToken = (req, res) => __awaiter(void 0, void 0, void 0, 
         }
         // Query Firestore for a user with this email
         const userDoc = yield firebase_1.db.collection("users").where("email", "==", email).get();
-        checkTokenType(idToken);
         res.json({ exists: !userDoc.empty });
         return;
     }

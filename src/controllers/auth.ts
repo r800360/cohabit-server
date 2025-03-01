@@ -3,6 +3,39 @@ import { oauth2Client, scopes } from "../config/oauth2";
 import crypto from "crypto";
 import { google } from "googleapis";
 import { db, auth } from "../config/firebase";
+// const jwt = require('jsonwebtoken');
+import jwt, { JwtPayload } from "jsonwebtoken";
+
+function checkTokenType(token: string): void {
+  if (!token) {
+    console.log("Invalid Token: Empty or Undefined");
+    return;
+  }
+
+  const decoded = jwt.decode(token, { complete: true });
+
+  if (!decoded || !decoded.payload) {
+    console.log("Invalid Token: Could not decode");
+    return;
+  }
+
+  const payload = decoded.payload as JwtPayload;
+
+  console.log("Decoded Header:", decoded.header);
+  console.log("Decoded Payload:", payload);
+
+  if (payload.iss?.includes("accounts.google.com")) {
+    console.log("This is a Google ID Token.");
+  } else if (payload.iss?.includes("securetoken.google.com")) {
+    console.log("This is a Firebase ID Token.");
+  } else {
+    console.log("Unknown Token Type.");
+  }
+}
+
+// // Example usage
+// const token: string = "your_jwt_token_here"; // Replace with actual token
+// checkTokenType(token);
 
 export const validateGoogleAuthToken = async (req: Request, res: Response) => {
     const { idToken } = req.body;
@@ -23,6 +56,7 @@ export const validateGoogleAuthToken = async (req: Request, res: Response) => {
         // Query Firestore for a user with this email
         const userDoc = await db.collection("users").where("email", "==", email).get();
 
+        checkTokenType(idToken);
         res.json({ exists: !userDoc.empty });
         return;
 

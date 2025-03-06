@@ -11,6 +11,7 @@ const express_session_1 = __importDefault(require("express-session"));
 const user_1 = __importDefault(require("./routes/user"));
 const crypto_1 = __importDefault(require("crypto"));
 const auth_1 = __importDefault(require("./routes/auth"));
+const request_1 = __importDefault(require("./routes/request"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const port = (_a = process.env.PORT) !== null && _a !== void 0 ? _a : 5000;
@@ -31,6 +32,7 @@ app.get("/tick", (req, res) => {
 });
 app.use("/api/users", user_1.default);
 app.use("/api", auth_1.default);
+app.use("/api/friends", request_1.default);
 // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
 app.use((error, req, res, next) => {
     // 500 is the "internal server error" error code, this will be our fallback

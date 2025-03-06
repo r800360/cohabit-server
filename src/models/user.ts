@@ -1,5 +1,4 @@
 import { Habit } from "./habit";
-import { Course } from "./course";
 
 export interface User {
     firebaseId: string;
@@ -7,7 +6,8 @@ export interface User {
     email: string;
     friendList: string[];
     habitList: Habit[];
-    courseList: Course[];
     blockedList: string[];
-    focusGroups: string[];
+    // courseList: Course[];
+    // focusGroups: string[];
   }
+  

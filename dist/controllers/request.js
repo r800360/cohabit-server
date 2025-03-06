@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.listFriends = void 0;
+exports.removeFriend = exports.listFriends = void 0;
 const firebase_1 = require("../config/firebase");
 const listFriends = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { userID } = req.body;
@@ -39,4 +39,29 @@ const listFriends = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.listFriends = listFriends;
+const removeFriend = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { userID } = req.body;
+    const { username } = req.params;
+    if (!userID || !username) {
+        return res.status(400).json({ error: "User ID and username are required" });
+    }
+    try {
+        const friendRows = yield firebase_1.db.collection("requests")
+            .where("status", "==", "accepted")
+            .where("senderId", "in", [userID, username])
+            .where("receiverId", "in", [userID, username])
+            .get();
+        if (friendRows.empty) {
+            return res.status(404).json({ error: "Friendship not found" });
+        }
+        const batch = firebase_1.db.batch();
+        friendRows.forEach(doc => batch.delete(doc.ref));
+        yield batch.commit();
+        res.status(200).json({ success: true, message: "Friend removed successfully" });
+    }
+    catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+exports.removeFriend = removeFriend;
 //# sourceMappingURL=request.js.map

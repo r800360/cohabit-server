@@ -5,6 +5,7 @@ import session from "express-session";
 import userRoutes from "./routes/user";
 import crypto from "crypto";
 import authRoutes from "./routes/auth";
+import friendRoutes from "./routes/request"
 
 
 dotenv.config();
@@ -35,6 +36,7 @@ app.get("/tick", (req: Request, res: Response) => {
 
 app.use("/api/users", userRoutes);
 app.use("/api", authRoutes);
+app.use("/api/friends", friendRoutes);
 
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars

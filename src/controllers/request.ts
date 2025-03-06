@@ -6,7 +6,8 @@ export const listFriends = async (req: Request, res: Response) => {
     const { userID } = req.body;
 
     if (!userID) {
-        return res.status(400).json({ error: "User ID is required"});
+        res.status(400).json({ error: "User ID is required"});
+        return;
     }
 
     try {
@@ -31,6 +32,7 @@ export const listFriends = async (req: Request, res: Response) => {
         });
 
         res.status(200).json({ friends });
+        return;
 
     } catch (error) {
 
@@ -47,7 +49,8 @@ export const removeFriend = async (req: Request, res: Response) => {
     const { username } = req.params;
 
     if (!userID || !username) {
-        return res.status(400).json({ error: "User ID and username are required"});
+        res.status(400).json({ error: "User ID and username are required"});
+        return;
     }
 
     try {
@@ -58,7 +61,8 @@ export const removeFriend = async (req: Request, res: Response) => {
         .get();
 
         if (friendRows.empty) {
-            return res.status(404).json({ error: "Friendship not found" });
+            res.status(404).json({ error: "Friendship not found" });
+            return;
         }
 
         const batch = db.batch();
@@ -66,6 +70,7 @@ export const removeFriend = async (req: Request, res: Response) => {
         await batch.commit();
 
         res.status(200).json({ success: true, message: "Friend removed successfully" });
+        return;
 
     } catch (error) {
 
@@ -81,11 +86,13 @@ export const createFriendReq = async (req: Request, res: Response) => {
     const { senderId, receiverId } = req.body;
 
     if (!senderId || !receiverId) {
-        return res.status(400).json({ error: "Sender ID and Receiver ID are required" });
+        res.status(400).json({ error: "Sender ID and Receiver ID are required" });
+        return;
     }
 
     if (senderId === receiverId) {
-        return res.status(400).json({ error: "Invalid request: Cannot send a friend request to yourself" })
+        res.status(400).json({ error: "Invalid request: Cannot send a friend request to yourself" })
+        return;
     }
 
     try {
@@ -95,7 +102,8 @@ export const createFriendReq = async (req: Request, res: Response) => {
         .get();
 
         if (!existingReq.empty) {
-            return res.status(400).json({ error: "Friend request already exists" });
+            res.status(400).json({ error: "Friend request already exists" });
+            return;
         }
 
         await db.collection("requests").add({
@@ -105,6 +113,7 @@ export const createFriendReq = async (req: Request, res: Response) => {
         });
 
         res.status(201).json({ success: true, message: "Friend request sent successfully" });
+        return;
 
     } catch (error) {
 
@@ -121,7 +130,8 @@ export const removePending = async (req: Request, res: Response) => {
     const { username } = req.params;
 
     if (!userID || !username) {
-        return res.status(400).json({ error: "User ID and username are required"});
+        res.status(400).json({ error: "User ID and username are required"});
+        return;
     }
 
     try {
@@ -132,7 +142,8 @@ export const removePending = async (req: Request, res: Response) => {
         .get();
 
         if (friendRows.empty) {
-            return res.status(404).json({ error: "Friend request not found" });
+            res.status(404).json({ error: "Friend request not found" });
+            return;
         }
 
         const batch = db.batch();
@@ -140,6 +151,7 @@ export const removePending = async (req: Request, res: Response) => {
         await batch.commit();
 
         res.status(200).json({ success: true, message: "Friend request removed successfully" });
+        return;
 
     } catch (error) {
 
@@ -155,7 +167,8 @@ export const listPending = async (req: Request, res: Response) => {
     const { userID } = req.body;
 
     if (!userID) {
-        return res.status(400).json({ error: "User ID is required"});
+        res.status(400).json({ error: "User ID is required"});
+        return;
     }
 
     try {
@@ -172,7 +185,8 @@ export const listPending = async (req: Request, res: Response) => {
         .get();
 
         if (senderPending.empty && receiverPending.empty) {
-            return res.status(404).json({ error: "No pending requests found" });
+            res.status(404).json({ error: "No pending requests found" });
+            return;
         }
 
         senderPending.forEach(doc => {
@@ -184,6 +198,7 @@ export const listPending = async (req: Request, res: Response) => {
         });
 
         res.status(200).json({ pending });
+        return;
 
     } catch (error) {
 
@@ -199,7 +214,8 @@ export const acceptFriendReq = async (req: Request, res: Response) => {
     const { senderId, receiverId } = req.body;
 
     if (!senderId || !receiverId) {
-        return res.status(400).json({ error: "Sender ID and Receiver ID are required" });
+        res.status(400).json({ error: "Sender ID and Receiver ID are required" });
+        return;
     }
 
     try {
@@ -210,13 +226,15 @@ export const acceptFriendReq = async (req: Request, res: Response) => {
         .get();
 
         if (req.empty) {
-            return res.status(404).json({ error: "Friend request not found" });
+            res.status(404).json({ error: "Friend request not found" });
+            return;
         }
 
         const docId = req.docs[0].id;
         await db.collection("requests").doc(docId).update({ status: "accepted" });
 
         res.status(200).json({ success: true, message: "Friend request accepted" });
+        return;
 
     } catch (error) {
 
@@ -232,7 +250,8 @@ export const rejectFriendReq = async (req: Request, res: Response) => {
     const { senderId, receiverId } = req.body;
 
     if (!senderId || !receiverId) {
-        return res.status(400).json({ error: "Sender ID and Receiver ID are required" });
+        res.status(400).json({ error: "Sender ID and Receiver ID are required" });
+        return;
     }
 
     try {
@@ -243,13 +262,15 @@ export const rejectFriendReq = async (req: Request, res: Response) => {
         .get();
 
         if (req.empty) {
-            return res.status(404).json({ error: "Friend request not found" });
+            res.status(404).json({ error: "Friend request not found" });
+            return;
         }
 
         const docId = req.docs[0].id;
         await db.collection("requests").doc(docId).update({ status: "rejected" });
 
         res.status(200).json({ success: true, message: "Friend request rejected" });
+        return;
 
     } catch (error) {
 

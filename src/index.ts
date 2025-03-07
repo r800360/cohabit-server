@@ -7,7 +7,7 @@ import crypto from "crypto";
 
 import userRoutes from "./routes/user";
 import authRoutes from "./routes/auth";
-import friendRoutes from "./routes/request";
+import friendRoutes from "./routes/friends";
 import habitRoutes from "./routes/habit";
 
 

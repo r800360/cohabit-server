@@ -29,4 +29,4 @@ exports.validateAcceptRejectRequest = [
     (0, express_validator_1.body)("senderId").notEmpty().withMessage("Sender ID is required"),
     (0, express_validator_1.body)("receiverId").notEmpty().withMessage("Receiver ID is required"),
 ];
-//# sourceMappingURL=request.js.map
+//# sourceMappingURL=friends.js.map

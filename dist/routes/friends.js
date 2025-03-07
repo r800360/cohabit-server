@@ -37,15 +37,20 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const RequestController = __importStar(require("../controllers/request"));
-const RequestValidator = __importStar(require("../validators/request"));
+const FriendController = __importStar(require("../controllers/friends"));
+const FriendValidator = __importStar(require("../validators/friends"));
 const router = express_1.default.Router();
-router.get("/", RequestValidator.validateUserId, RequestController.listFriends);
-router.delete("/:username", RequestValidator.validateRemoveFriend, RequestController.removeFriend);
-router.post("/request", RequestValidator.validateFriendRequest, RequestController.createFriendReq);
-router.delete("/request/:username", RequestValidator.validatePendingRemoval, RequestController.removePending);
-router.get("/pending", RequestValidator.validateUserId, RequestController.listPending);
-router.post("/accept", RequestValidator.validateAcceptRejectRequest, RequestController.acceptFriendReq);
-router.post("/reject", RequestValidator.validateAcceptRejectRequest, RequestController.rejectFriendReq);
+// Fetching friends and requests
+router.get("/", FriendValidator.validateUserId, FriendController.fetchFriends);
+router.get("/pending", FriendValidator.validateUserId, FriendController.fetchPending);
+// Friend request management
+router.post("/request", FriendValidator.validateFriendRequest, FriendController.createFriendRequest);
+router.post("/cancel", FriendValidator.validateFriendRequest, FriendController.cancelFriendRequest);
+router.post("/accept", FriendValidator.validateAcceptRejectRequest, FriendController.acceptFriendRequest);
+router.post("/reject", FriendValidator.validateAcceptRejectRequest, FriendController.rejectFriendRequest);
+// Removing friends
+router.delete("/:username", FriendValidator.validateRemoveFriend, FriendController.removeFriend);
+router.delete("/request/:username", FriendValidator.validatePendingRemoval, FriendController.removePending);
+router.post("/remove", FriendValidator.validateRemoveFriend, FriendController.removeFriend);
 exports.default = router;
-//# sourceMappingURL=request.js.map
+//# sourceMappingURL=friends.js.map

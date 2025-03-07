@@ -12,7 +12,7 @@ const crypto_1 = __importDefault(require("crypto"));
 // import cors from "cors";
 const user_1 = __importDefault(require("./routes/user"));
 const auth_1 = __importDefault(require("./routes/auth"));
-const request_1 = __importDefault(require("./routes/request"));
+const friends_1 = __importDefault(require("./routes/friends"));
 const habit_1 = __importDefault(require("./routes/habit"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
@@ -38,7 +38,7 @@ app.get("/tick", (req, res) => {
 // API Routes
 app.use("/api/users", user_1.default);
 app.use("/api/auth", auth_1.default);
-app.use("/api/friends", request_1.default);
+app.use("/api/friends", friends_1.default);
 app.use("/api/habits", habit_1.default);
 // Global error handler
 // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars

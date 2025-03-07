@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getHabits = exports.deleteUser = exports.deleteUserByEmail = exports.updateUserByEmail = exports.updateUser = exports.createUser = exports.checkUserExists = exports.getAllUsers = exports.debugRoute = void 0;
+exports.getHabits = exports.deleteUser = exports.deleteUserByEmail = exports.updateUserByEmail = exports.updateUser = exports.createUser = exports.checkUserExists = exports.fetchUserById = exports.fetchUserByName = exports.fetchUserByEmail = exports.getAllUsers = exports.debugRoute = void 0;
 const firebase_1 = require("../config/firebase");
 const debugRoute = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -32,6 +32,56 @@ const getAllUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.getAllUsers = getAllUsers;
+const fetchUserByEmail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { email } = req.params;
+    try {
+        const snapshot = yield firebase_1.db.collection("users").where("email", "==", email).get();
+        if (snapshot.empty) {
+            res.status(404).json(null);
+            return;
+        }
+        const user = snapshot.docs[0].data();
+        res.status(200).json(Object.assign({ id: snapshot.docs[0].id }, user));
+        return;
+    }
+    catch (error) {
+        res.status(500).json({ error: "Error fetching user" });
+        return;
+    }
+});
+exports.fetchUserByEmail = fetchUserByEmail;
+const fetchUserByName = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { name } = req.params;
+    try {
+        const snapshot = yield firebase_1.db.collection("users").where("name", "==", name).get();
+        if (snapshot.empty) {
+            res.status(404).json(null);
+            return;
+        }
+        const user = snapshot.docs[0].data();
+        res.status(200).json(Object.assign({ id: snapshot.docs[0].id }, user));
+    }
+    catch (error) {
+        res.status(500).json({ error: "Error fetching user" });
+    }
+});
+exports.fetchUserByName = fetchUserByName;
+const fetchUserById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.params;
+    try {
+        const userDoc = yield firebase_1.db.collection("users").doc(id).get();
+        if (!userDoc.exists) {
+            res.status(404).json(null);
+            ;
+            return;
+        }
+        res.status(200).json(Object.assign({ id: userDoc.id }, userDoc.data()));
+    }
+    catch (error) {
+        res.status(500).json({ error: "Error fetching user" });
+    }
+});
+exports.fetchUserById = fetchUserById;
 const checkUserExists = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email } = req.body;
     const userRef = firebase_1.db.collection("users").where("email", "==", email);
@@ -63,8 +113,8 @@ const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             email,
             friendList: [],
             habitList: [],
-            courseList: [],
-            // blockedList: [],
+            // courseList: [],
+            blockedList: [],
             // focusGroups: [],
         });
         res.status(201).json({ message: "User created successfully" });

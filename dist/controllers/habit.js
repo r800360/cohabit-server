@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteHabit = exports.updateHabit = exports.createHabit = exports.getHabitById = exports.getAllHabits = void 0;
+exports.markHabitMissed = exports.markHabitComplete = exports.fetchHabitStreaks = exports.deleteHabit = exports.updateHabit = exports.createHabit = exports.getHabitById = exports.getAllHabits = void 0;
 const firebase_1 = require("../config/firebase");
 const getAllHabits = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email } = req.query;
@@ -130,4 +130,79 @@ const deleteHabit = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.deleteHabit = deleteHabit;
+/** Fetch habit streaks */
+const fetchHabitStreaks = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.params;
+    if (!id) {
+        res.status(400).json({ error: "Habit ID is required" });
+        return;
+    }
+    try {
+        const habitDoc = yield firebase_1.db.collection("habits").doc(id).get();
+        if (!habitDoc.exists) {
+            res.status(404).json({ error: "Habit not found" });
+            return;
+        }
+        const habitData = habitDoc.data();
+        res.status(200).json((habitData === null || habitData === void 0 ? void 0 : habitData.streaks) || []);
+        return;
+    }
+    catch (error) {
+        res.status(500).json({ error: "Error retrieving habit streaks" });
+        return;
+    }
+});
+exports.fetchHabitStreaks = fetchHabitStreaks;
+/** Mark habit as complete */
+const markHabitComplete = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id, date } = req.body;
+    if (!id || !date) {
+        res.status(400).json({ error: "Habit ID and date are required" });
+        return;
+    }
+    try {
+        const habitRef = firebase_1.db.collection("habits").doc(id);
+        const habitDoc = yield habitRef.get();
+        if (!habitDoc.exists) {
+            res.status(404).json({ error: "Habit not found" });
+            return;
+        }
+        const habitData = habitDoc.data();
+        const updatedStreaks = [...((habitData === null || habitData === void 0 ? void 0 : habitData.streaks) || []), date];
+        yield habitRef.update({ streaks: updatedStreaks });
+        res.status(200).json({ message: "Habit marked as complete", streaks: updatedStreaks });
+        return;
+    }
+    catch (error) {
+        res.status(500).json({ error: "Error marking habit complete" });
+        return;
+    }
+});
+exports.markHabitComplete = markHabitComplete;
+/** Mark habit as missed */
+const markHabitMissed = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id, date } = req.body;
+    if (!id || !date) {
+        res.status(400).json({ error: "Habit ID and date are required" });
+        return;
+    }
+    try {
+        const habitRef = firebase_1.db.collection("habits").doc(id);
+        const habitDoc = yield habitRef.get();
+        if (!habitDoc.exists) {
+            res.status(404).json({ error: "Habit not found" });
+            return;
+        }
+        const habitData = habitDoc.data();
+        const updatedStreaks = ((habitData === null || habitData === void 0 ? void 0 : habitData.streaks) || []).filter((streakDate) => streakDate !== date);
+        yield habitRef.update({ streaks: updatedStreaks });
+        res.status(200).json({ message: "Habit marked as missed", streaks: updatedStreaks });
+        return;
+    }
+    catch (error) {
+        res.status(500).json({ error: "Error marking habit missed" });
+        return;
+    }
+});
+exports.markHabitMissed = markHabitMissed;
 //# sourceMappingURL=habit.js.map

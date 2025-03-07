@@ -149,3 +149,86 @@ export const deleteHabit = async (req: Request, res: Response) => {
     return;
   }
 };
+
+/** Fetch habit streaks */
+export const fetchHabitStreaks = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    if (!id) {
+        res.status(400).json({ error: "Habit ID is required" });
+        return;
+    }
+  
+    try {
+      const habitDoc = await db.collection("habits").doc(id).get();
+      if (!habitDoc.exists) {
+        res.status(404).json({ error: "Habit not found" });
+        return;
+      } 
+  
+      const habitData = habitDoc.data();
+      res.status(200).json(habitData?.streaks || []);
+      return;
+    } catch (error) {
+      res.status(500).json({ error: "Error retrieving habit streaks" });
+      return;
+    }
+  };
+  
+  /** Mark habit as complete */
+  export const markHabitComplete = async (req: Request, res: Response) => {
+    const { id, date } = req.body;
+    if (!id || !date) {
+        res.status(400).json({ error: "Habit ID and date are required" });
+        return;
+    } 
+  
+    try {
+      const habitRef = db.collection("habits").doc(id);
+      const habitDoc = await habitRef.get();
+  
+      if (!habitDoc.exists) {
+        res.status(404).json({ error: "Habit not found" });
+        return;
+      }
+  
+      const habitData = habitDoc.data();
+      const updatedStreaks = [...(habitData?.streaks || []), date];
+  
+      await habitRef.update({ streaks: updatedStreaks });
+      res.status(200).json({ message: "Habit marked as complete", streaks: updatedStreaks });
+      return;
+    } catch (error) {
+      res.status(500).json({ error: "Error marking habit complete" });
+      return;
+    }
+  };
+  
+  /** Mark habit as missed */
+  export const markHabitMissed = async (req: Request, res: Response) => {
+    const { id, date } = req.body;
+    if (!id || !date) {
+        res.status(400).json({ error: "Habit ID and date are required" });
+        return;
+    } 
+  
+    try {
+      const habitRef = db.collection("habits").doc(id);
+      const habitDoc = await habitRef.get();
+  
+      if (!habitDoc.exists) {
+        res.status(404).json({ error: "Habit not found" });
+        return;
+      }
+  
+      const habitData = habitDoc.data();
+      const updatedStreaks = (habitData?.streaks || []).filter((streakDate: string | FirebaseFirestore.Timestamp) => streakDate !== date);
+  
+      await habitRef.update({ streaks: updatedStreaks });
+      res.status(200).json({ message: "Habit marked as missed", streaks: updatedStreaks });
+      return;
+    } catch (error) {
+      res.status(500).json({ error: "Error marking habit missed" });
+      return;
+    }
+  };
+  

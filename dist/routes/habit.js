@@ -40,10 +40,18 @@ const express_1 = __importDefault(require("express"));
 const HabitController = __importStar(require("../controllers/habit"));
 const HabitValidator = __importStar(require("../validators/habit"));
 const router = express_1.default.Router();
+// Fetching habits
 router.get("/", HabitValidator.validateEmail, HabitController.getAllHabits);
-router.get("/:habitId", HabitValidator.validateHabitId, HabitController.getHabitById);
+router.get("/:id", HabitValidator.validateHabitId, HabitController.getHabitById);
+router.get("/:id/streaks", HabitValidator.validateHabitId, HabitController.fetchHabitStreaks);
+// Habit operations
 router.post("/", HabitValidator.validateHabitCreation, HabitController.createHabit);
 router.put("/", HabitValidator.validateHabitUpdate, HabitController.updateHabit);
+router.put("/update", HabitValidator.validateHabitUpdate, HabitController.updateHabit);
+router.post("/delete", HabitValidator.validateHabitDeletion, HabitController.deleteHabit);
 router.delete("/", HabitValidator.validateHabitDeletion, HabitController.deleteHabit);
+// Habit completion tracking
+router.post("/complete", HabitValidator.validateHabitId, HabitController.markHabitComplete);
+router.post("/missed", HabitValidator.validateHabitId, HabitController.markHabitMissed);
 exports.default = router;
 //# sourceMappingURL=habit.js.map

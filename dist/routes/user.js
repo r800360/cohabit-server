@@ -40,15 +40,23 @@ const express_1 = __importDefault(require("express"));
 const UserController = __importStar(require("../controllers/user"));
 const UserValidator = __importStar(require("../validators/user"));
 const router = express_1.default.Router();
-router.post("/check", UserController.checkUserExists);
-router.post("/signup", UserController.createUser);
-router.get("/test-db", UserController.debugRoute);
+// Fetch user by email, name, or ID
+router.get("/email/:email", UserController.fetchUserByEmail);
+router.get("/name/:name", UserController.fetchUserByName);
+router.get("/:id", UserController.fetchUserById);
+// User operations
 router.get("/", UserController.getAllUsers);
 router.post("/", UserValidator.validateUserCreation, UserController.createUser);
+router.post("/signup", UserController.createUser);
 router.put("/", UserController.updateUser);
 router.delete("/", UserValidator.validateEmail, UserController.deleteUser);
-router.post("/check", UserValidator.validateEmail, UserController.checkUserExists);
+router.delete("/email/:email", UserValidator.validateEmail, UserController.deleteUserByEmail);
+// Habits related to user
+router.get("/:id/habits", UserValidator.validateUserId, UserController.getHabits);
 router.post("/getHabits", UserValidator.validateEmail, UserController.getHabits);
+// Debugging
+router.get("/test-db", UserController.debugRoute);
+router.post("/check", UserValidator.validateEmail, UserController.checkUserExists);
 router.delete("/email", UserValidator.validateEmail, UserController.deleteUserByEmail);
 exports.default = router;
 //# sourceMappingURL=user.js.map

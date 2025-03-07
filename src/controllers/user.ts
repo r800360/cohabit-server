@@ -21,6 +21,55 @@ export const getAllUsers = async (req: Request, res: Response) => {
   }
 };
 
+export const fetchUserByEmail = async (req: Request, res: Response) => {
+  const { email } = req.params;
+  try {
+    const snapshot = await db.collection("users").where("email", "==", email).get();
+    if (snapshot.empty) {
+      res.status(404).json(null);
+      return;
+    } 
+
+    const user = snapshot.docs[0].data();
+    res.status(200).json({ id: snapshot.docs[0].id, ...user });
+    return;
+  } catch (error) {
+    res.status(500).json({ error: "Error fetching user" });
+    return;
+  }
+};
+
+export const fetchUserByName = async (req: Request, res: Response) => {
+  const { name } = req.params;
+  try {
+    const snapshot = await db.collection("users").where("name", "==", name).get();
+    if (snapshot.empty) {
+      res.status(404).json(null);
+      return;
+    } 
+
+    const user = snapshot.docs[0].data();
+    res.status(200).json({ id: snapshot.docs[0].id, ...user });
+  } catch (error) {
+    res.status(500).json({ error: "Error fetching user" });
+  }
+};
+
+export const fetchUserById = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const userDoc = await db.collection("users").doc(id).get();
+    if (!userDoc.exists) {
+      res.status(404).json(null);;
+      return; 
+    } 
+
+    res.status(200).json({ id: userDoc.id, ...userDoc.data() });
+  } catch (error) {
+    res.status(500).json({ error: "Error fetching user" });
+  }
+};
+
 export const checkUserExists = async (req: Request, res: Response) => {
   const { email } = req.body;
   const userRef = db.collection("users").where("email", "==", email);
@@ -54,8 +103,8 @@ export const createUser = async (req: Request, res: Response) => {
       email,
       friendList: [],
       habitList: [],
-      courseList: [],
-      // blockedList: [],
+      // courseList: [],
+      blockedList: [],
       // focusGroups: [],
     });
 

@@ -9,7 +9,7 @@ const express_1 = __importDefault(require("express"));
 const http_errors_1 = require("http-errors");
 const express_session_1 = __importDefault(require("express-session"));
 const crypto_1 = __importDefault(require("crypto"));
-const cors_1 = __importDefault(require("cors"));
+// import cors from "cors";
 const user_1 = __importDefault(require("./routes/user"));
 const auth_1 = __importDefault(require("./routes/auth"));
 const request_1 = __importDefault(require("./routes/request"));
@@ -18,9 +18,10 @@ dotenv_1.default.config();
 const app = (0, express_1.default)();
 const port = (_a = process.env.PORT) !== null && _a !== void 0 ? _a : 5000;
 // Middleware
-app.use((0, cors_1.default)()); // Enable CORS for cross-origin requests
+//app.use(cors()); // Enable CORS for cross-origin requests
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
+app.use(express_1.default.json());
 // Express session setup
 app.use((0, express_session_1.default)({
     secret: process.env.CLIENT_SECRET || crypto_1.default.randomBytes(32).toString("hex"),

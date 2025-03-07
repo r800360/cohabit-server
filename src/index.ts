@@ -3,7 +3,7 @@ import express, { Express, NextFunction, Request, Response } from "express";
 import { isHttpError } from "http-errors";
 import session from "express-session";
 import crypto from "crypto";
-import cors from "cors";
+// import cors from "cors";
 
 import userRoutes from "./routes/user";
 import authRoutes from "./routes/auth";
@@ -17,9 +17,10 @@ const app: Express = express();
 const port = process.env.PORT ?? 5000;
 
 // Middleware
-app.use(cors()); // Enable CORS for cross-origin requests
+//app.use(cors()); // Enable CORS for cross-origin requests
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
 // Express session setup
 app.use(

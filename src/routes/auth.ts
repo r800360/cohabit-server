@@ -1,10 +1,10 @@
 import express from "express";
-import { initiateGoogleAuth, handleOAuthCallback, validateGoogleAuthToken } from "../controllers/auth";
+import * as AuthController from "../controllers/auth";
 
 const router = express.Router();
 
-router.get("/google", initiateGoogleAuth);
-router.get("/callback", handleOAuthCallback);
-router.post("/google", validateGoogleAuthToken);
+router.get("/google", AuthController.initiateGoogleAuth);
+router.get("/callback", AuthController.handleOAuthCallback);
+router.post("/google", AuthController.validateGoogleAuthToken);
 
 export default router;

@@ -38,14 +38,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const RequestController = __importStar(require("../controllers/request"));
+const RequestValidator = __importStar(require("../validators/request"));
 const router = express_1.default.Router();
-router.get("/", RequestController.listFriends);
-router.delete("/:username", RequestController.removeFriend);
-router.post("/request", RequestController.createFriendReq);
-router.delete("/request/:username", RequestController.removePending);
-router.get("/pending", RequestController.listPending);
-router.post("/accept", RequestController.acceptFriendReq);
-router.post("/reject", RequestController.rejectFriendReq);
-// router.get("/test-db", RequestController.debugRoute);
+router.get("/", RequestValidator.validateUserId, RequestController.listFriends);
+router.delete("/:username", RequestValidator.validateRemoveFriend, RequestController.removeFriend);
+router.post("/request", RequestValidator.validateFriendRequest, RequestController.createFriendReq);
+router.delete("/request/:username", RequestValidator.validatePendingRemoval, RequestController.removePending);
+router.get("/pending", RequestValidator.validateUserId, RequestController.listPending);
+router.post("/accept", RequestValidator.validateAcceptRejectRequest, RequestController.acceptFriendReq);
+router.post("/reject", RequestValidator.validateAcceptRejectRequest, RequestController.rejectFriendReq);
 exports.default = router;
 //# sourceMappingURL=request.js.map

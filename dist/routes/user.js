@@ -38,9 +38,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const UserController = __importStar(require("../controllers/user"));
+const UserValidator = __importStar(require("../validators/user"));
 const router = express_1.default.Router();
 router.post("/check", UserController.checkUserExists);
 router.post("/signup", UserController.createUser);
 router.get("/test-db", UserController.debugRoute);
+router.get("/", UserController.getAllUsers);
+router.post("/", UserValidator.validateUserCreation, UserController.createUser);
+router.put("/", UserController.updateUser);
+router.delete("/", UserValidator.validateEmail, UserController.deleteUser);
+router.post("/check", UserValidator.validateEmail, UserController.checkUserExists);
+router.post("/getHabits", UserValidator.validateEmail, UserController.getHabits);
+router.delete("/email", UserValidator.validateEmail, UserController.deleteUserByEmail);
 exports.default = router;
 //# sourceMappingURL=user.js.map

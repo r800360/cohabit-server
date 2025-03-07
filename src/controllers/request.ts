@@ -1,281 +1,235 @@
 import { Request, Response } from "express";
 import { db } from "../config/firebase";
 
+/** Get the list of friends for a user */
 export const listFriends = async (req: Request, res: Response) => {
+  const { userId } = req.body;
 
-    const { userID } = req.body;
+  if (!userId) {
+    res.status(400).json({ error: "User ID is required" });
+    return;
+  }
 
-    if (!userID) {
-        res.status(400).json({ error: "User ID is required"});
-        return;
-    }
+  try {
+    const friends: string[] = [];
 
-    try {
-        const friends: string[] = [];
+    const friendSnapshot = await db.collection("friends")
+      .where("users", "array-contains", userId)
+      .get();
 
-        const sentReqs = await db.collection("requests")
-        .where("senderId", "==", userID)
-        .where("status", "==", "accepted")
-        .get();
+    friendSnapshot.forEach(doc => {
+      const users = doc.data().users;
+      const friendId = users.find((id: string) => id !== userId);
+      if (friendId) friends.push(friendId);
+    });
 
-        sentReqs.forEach(doc => {
-            friends.push(doc.data().receiverId);
-        });
-
-        const recReqs = await db.collection("requests")
-        .where("receiverId", "==", userID)
-        .where("status", "==", "accepted")
-        .get();
-
-        recReqs.forEach(doc => {
-            friends.push(doc.data().senderId);
-        });
-
-        res.status(200).json({ friends });
-        return;
-
-    } catch (error) {
-
-        res.status(500).json({ error: error.message});
-
-    }
-
+    res.status(200).json({ friends });
+    return;
+  } catch (error) {
+    res.status(500).json({ error: "Error retrieving friends" });
+    return;
+  }
 };
 
-
+/** Remove a friend */
 export const removeFriend = async (req: Request, res: Response) => {
+  const { userId } = req.body;
+  const { username } = req.params;
 
-    const { userID } = req.body;
-    const { username } = req.params;
+  if (!userId || !username) {
+    res.status(400).json({ error: "User ID and username are required" });
+    return;
+  }
 
-    if (!userID || !username) {
-        res.status(400).json({ error: "User ID and username are required"});
-        return;
+  try {
+    const friendSnapshot = await db.collection("friends")
+      .where("users", "array-contains", userId)
+      .get();
+
+    const friendDoc = friendSnapshot.docs.find(doc => doc.data().users.includes(username));
+
+    if (!friendDoc) {
+      res.status(404).json({ error: "Friendship not found" });
+      return;
     }
 
-    try {
-        const friendRows = await db.collection("requests")
-        .where("status", "==", "accepted")
-        .where("senderId", "in", [userID, username])
-        .where("receiverId", "in", [userID, username])
-        .get();
+    await friendDoc.ref.delete();
 
-        if (friendRows.empty) {
-            res.status(404).json({ error: "Friendship not found" });
-            return;
-        }
-
-        const batch = db.batch();
-        friendRows.forEach(doc => batch.delete(doc.ref));
-        await batch.commit();
-
-        res.status(200).json({ success: true, message: "Friend removed successfully" });
-        return;
-
-    } catch (error) {
-
-        res.status(500).json({ error: error.message});
-
-    }
-
+    res.status(200).json({ message: "Friend removed successfully" });
+    return;
+  } catch (error) {
+    res.status(500).json({ error: "Error removing friend" });
+    return;
+  }
 };
 
-
+/** Create a friend request */
 export const createFriendReq = async (req: Request, res: Response) => {
+  const { senderId, receiverId } = req.body;
 
-    const { senderId, receiverId } = req.body;
+  if (!senderId || !receiverId) {
+    res.status(400).json({ error: "Sender ID and Receiver ID are required" });
+    return;
+  }
 
-    if (!senderId || !receiverId) {
-        res.status(400).json({ error: "Sender ID and Receiver ID are required" });
-        return;
+  if (senderId === receiverId) {
+    res.status(400).json({ error: "Cannot send a friend request to yourself" });
+    return;
+  }
+
+  try {
+    const existingReq = await db.collection("friendRequests")
+      .where("senderId", "==", senderId)
+      .where("receiverId", "==", receiverId)
+      .get();
+
+    if (!existingReq.empty) {
+      res.status(400).json({ error: "Friend request already exists" });
+      return;
     }
 
-    if (senderId === receiverId) {
-        res.status(400).json({ error: "Invalid request: Cannot send a friend request to yourself" })
-        return;
-    }
+    await db.collection("friendRequests").add({
+      senderId,
+      receiverId,
+      status: "pending"
+    });
 
-    try {
-        const existingReq = await db.collection("requests")
-        .where("senderId", "in", [senderId, receiverId])
-        .where("receiverId", "in", [senderId, receiverId])
-        .get();
-
-        if (!existingReq.empty) {
-            res.status(400).json({ error: "Friend request already exists" });
-            return;
-        }
-
-        await db.collection("requests").add({
-            senderId,
-            receiverId,
-            status: "pending"
-        });
-
-        res.status(201).json({ success: true, message: "Friend request sent successfully" });
-        return;
-
-    } catch (error) {
-
-        res.status(500).json({ error: error.message});
-
-    }
-
+    res.status(201).json({ message: "Friend request sent" });
+    return;
+  } catch (error) {
+    res.status(500).json({ error: "Error sending friend request" });
+    return;
+  }
 };
 
-
+/** Remove a pending friend request */
 export const removePending = async (req: Request, res: Response) => {
+  const { userId } = req.body;
+  const { username } = req.params;
 
-    const { userID } = req.body;
-    const { username } = req.params;
+  if (!userId || !username) {
+    res.status(400).json({ error: "User ID and username are required" });
+    return;
+  }
 
-    if (!userID || !username) {
-        res.status(400).json({ error: "User ID and username are required"});
-        return;
+  try {
+    const requestSnapshot = await db.collection("friendRequests")
+      .where("senderId", "==", userId)
+      .where("receiverId", "==", username)
+      .where("status", "==", "pending")
+      .get();
+
+    if (requestSnapshot.empty) {
+      res.status(404).json({ error: "Pending request not found" });
+      return;
     }
 
-    try {
-        const friendRows = await db.collection("requests")
-        .where("status", "==", "pending")
-        .where("senderId", "==", userID)
-        .where("receiverId", "==", username)
-        .get();
+    const batch = db.batch();
+    requestSnapshot.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
 
-        if (friendRows.empty) {
-            res.status(404).json({ error: "Friend request not found" });
-            return;
-        }
-
-        const batch = db.batch();
-        friendRows.forEach(doc => batch.delete(doc.ref));
-        await batch.commit();
-
-        res.status(200).json({ success: true, message: "Friend request removed successfully" });
-        return;
-
-    } catch (error) {
-
-        res.status(500).json({ error: error.message});
-
-    }
-
+    res.status(200).json({ message: "Friend request removed" });
+    return;
+  } catch (error) {
+    res.status(500).json({ error: "Error removing friend request" });
+    return;
+  }
 };
 
-
+/** List pending friend requests */
 export const listPending = async (req: Request, res: Response) => {
+  const { userId } = req.body;
 
-    const { userID } = req.body;
+  if (!userId) {
+    res.status(400).json({ error: "User ID is required" });
+    return;
+  }
 
-    if (!userID) {
-        res.status(400).json({ error: "User ID is required"});
-        return;
-    }
+  try {
+    const pending: string[] = [];
 
-    try {
-        const pending: string[] = [];
+    const pendingSnapshot = await db.collection("friendRequests")
+      .where("receiverId", "==", userId)
+      .where("status", "==", "pending")
+      .get();
 
-        const senderPending = await db.collection("requests")
-        .where("status", "==", "pending")
-        .where("senderId", "==", userID)
-        .get();
+    pendingSnapshot.forEach(doc => {
+      pending.push(doc.data().senderId);
+    });
 
-        const receiverPending = await db.collection("requests")
-        .where("status", "==", "pending")
-        .where("receiverId", "==", userID)
-        .get();
-
-        if (senderPending.empty && receiverPending.empty) {
-            res.status(404).json({ error: "No pending requests found" });
-            return;
-        }
-
-        senderPending.forEach(doc => {
-            pending.push(doc.data().receiverId);
-        });
-
-        receiverPending.forEach(doc => {
-            pending.push(doc.data().senderId);
-        });
-
-        res.status(200).json({ pending });
-        return;
-
-    } catch (error) {
-
-        res.status(500).json({ error: error.message});
-
-    }
-
+    res.status(200).json({ pending });
+    return;
+  } catch (error) {
+    res.status(500).json({ error: "Error retrieving pending requests" });
+    return;
+  }
 };
 
-
+/** Accept a friend request */
 export const acceptFriendReq = async (req: Request, res: Response) => {
+  const { senderId, receiverId } = req.body;
 
-    const { senderId, receiverId } = req.body;
+  if (!senderId || !receiverId) {
+    res.status(400).json({ error: "Sender ID and Receiver ID are required" });
+    return;
+  }
 
-    if (!senderId || !receiverId) {
-        res.status(400).json({ error: "Sender ID and Receiver ID are required" });
-        return;
+  try {
+    const requestSnapshot = await db.collection("friendRequests")
+      .where("senderId", "==", senderId)
+      .where("receiverId", "==", receiverId)
+      .where("status", "==", "pending")
+      .get();
+
+    if (requestSnapshot.empty) {
+      res.status(404).json({ error: "Friend request not found" });
+      return;
     }
 
-    try {
-        const req = await db.collection("requests")
-        .where("status", "==", "pending")
-        .where("senderId", "==", senderId)
-        .where("receiverId", "==", receiverId)
-        .get();
+    const requestDoc = requestSnapshot.docs[0];
 
-        if (req.empty) {
-            res.status(404).json({ error: "Friend request not found" });
-            return;
-        }
+    await requestDoc.ref.update({ status: "accepted" });
 
-        const docId = req.docs[0].id;
-        await db.collection("requests").doc(docId).update({ status: "accepted" });
+    await db.collection("friends").add({
+      users: [senderId, receiverId],
+    });
 
-        res.status(200).json({ success: true, message: "Friend request accepted" });
-        return;
-
-    } catch (error) {
-
-        res.status(500).json({ error: error.message});
-
-    }
-
+    res.status(200).json({ message: "Friend request accepted" });
+    return;
+  } catch (error) {
+    res.status(500).json({ error: "Error accepting friend request" });
+    return;
+  }
 };
 
-
+/** Reject a friend request */
 export const rejectFriendReq = async (req: Request, res: Response) => {
+  const { senderId, receiverId } = req.body;
 
-    const { senderId, receiverId } = req.body;
+  if (!senderId || !receiverId) {
+    res.status(400).json({ error: "Sender ID and Receiver ID are required" });
+    return;
+  }
 
-    if (!senderId || !receiverId) {
-        res.status(400).json({ error: "Sender ID and Receiver ID are required" });
-        return;
+  try {
+    const requestSnapshot = await db.collection("friendRequests")
+      .where("senderId", "==", senderId)
+      .where("receiverId", "==", receiverId)
+      .where("status", "==", "pending")
+      .get();
+
+    if (requestSnapshot.empty) {
+      res.status(404).json({ error: "Friend request not found" });
+      return;
     }
 
-    try {
-        const req = await db.collection("requests")
-        .where("status", "==", "pending")
-        .where("senderId", "==", senderId)
-        .where("receiverId", "==", receiverId)
-        .get();
+    const requestDoc = requestSnapshot.docs[0];
+    await requestDoc.ref.update({ status: "rejected" });
 
-        if (req.empty) {
-            res.status(404).json({ error: "Friend request not found" });
-            return;
-        }
-
-        const docId = req.docs[0].id;
-        await db.collection("requests").doc(docId).update({ status: "rejected" });
-
-        res.status(200).json({ success: true, message: "Friend request rejected" });
-        return;
-
-    } catch (error) {
-
-        res.status(500).json({ error: error.message});
-
-    }
-
+    res.status(200).json({ message: "Friend request rejected" });
+    return;
+  } catch (error) {
+    res.status(500).json({ error: "Error rejecting friend request" });
+    return;
+  }
 };

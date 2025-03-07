@@ -11,64 +11,61 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.rejectFriendReq = exports.acceptFriendReq = exports.listPending = exports.removePending = exports.createFriendReq = exports.removeFriend = exports.listFriends = void 0;
 const firebase_1 = require("../config/firebase");
+/** Get the list of friends for a user */
 const listFriends = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { userID } = req.body;
-    if (!userID) {
+    const { userId } = req.body;
+    if (!userId) {
         res.status(400).json({ error: "User ID is required" });
         return;
     }
     try {
         const friends = [];
-        const sentReqs = yield firebase_1.db.collection("requests")
-            .where("senderId", "==", userID)
-            .where("status", "==", "accepted")
+        const friendSnapshot = yield firebase_1.db.collection("friends")
+            .where("users", "array-contains", userId)
             .get();
-        sentReqs.forEach(doc => {
-            friends.push(doc.data().receiverId);
-        });
-        const recReqs = yield firebase_1.db.collection("requests")
-            .where("receiverId", "==", userID)
-            .where("status", "==", "accepted")
-            .get();
-        recReqs.forEach(doc => {
-            friends.push(doc.data().senderId);
+        friendSnapshot.forEach(doc => {
+            const users = doc.data().users;
+            const friendId = users.find((id) => id !== userId);
+            if (friendId)
+                friends.push(friendId);
         });
         res.status(200).json({ friends });
         return;
     }
     catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: "Error retrieving friends" });
+        return;
     }
 });
 exports.listFriends = listFriends;
+/** Remove a friend */
 const removeFriend = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { userID } = req.body;
+    const { userId } = req.body;
     const { username } = req.params;
-    if (!userID || !username) {
+    if (!userId || !username) {
         res.status(400).json({ error: "User ID and username are required" });
         return;
     }
     try {
-        const friendRows = yield firebase_1.db.collection("requests")
-            .where("status", "==", "accepted")
-            .where("senderId", "in", [userID, username])
-            .where("receiverId", "in", [userID, username])
+        const friendSnapshot = yield firebase_1.db.collection("friends")
+            .where("users", "array-contains", userId)
             .get();
-        if (friendRows.empty) {
+        const friendDoc = friendSnapshot.docs.find(doc => doc.data().users.includes(username));
+        if (!friendDoc) {
             res.status(404).json({ error: "Friendship not found" });
             return;
         }
-        const batch = firebase_1.db.batch();
-        friendRows.forEach(doc => batch.delete(doc.ref));
-        yield batch.commit();
-        res.status(200).json({ success: true, message: "Friend removed successfully" });
+        yield friendDoc.ref.delete();
+        res.status(200).json({ message: "Friend removed successfully" });
         return;
     }
     catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: "Error removing friend" });
+        return;
     }
 });
 exports.removeFriend = removeFriend;
+/** Create a friend request */
 const createFriendReq = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { senderId, receiverId } = req.body;
     if (!senderId || !receiverId) {
@@ -76,93 +73,88 @@ const createFriendReq = (req, res) => __awaiter(void 0, void 0, void 0, function
         return;
     }
     if (senderId === receiverId) {
-        res.status(400).json({ error: "Invalid request: Cannot send a friend request to yourself" });
+        res.status(400).json({ error: "Cannot send a friend request to yourself" });
         return;
     }
     try {
-        const existingReq = yield firebase_1.db.collection("requests")
-            .where("senderId", "in", [senderId, receiverId])
-            .where("receiverId", "in", [senderId, receiverId])
+        const existingReq = yield firebase_1.db.collection("friendRequests")
+            .where("senderId", "==", senderId)
+            .where("receiverId", "==", receiverId)
             .get();
         if (!existingReq.empty) {
             res.status(400).json({ error: "Friend request already exists" });
             return;
         }
-        yield firebase_1.db.collection("requests").add({
+        yield firebase_1.db.collection("friendRequests").add({
             senderId,
             receiverId,
             status: "pending"
         });
-        res.status(201).json({ success: true, message: "Friend request sent successfully" });
+        res.status(201).json({ message: "Friend request sent" });
         return;
     }
     catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: "Error sending friend request" });
+        return;
     }
 });
 exports.createFriendReq = createFriendReq;
+/** Remove a pending friend request */
 const removePending = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { userID } = req.body;
+    const { userId } = req.body;
     const { username } = req.params;
-    if (!userID || !username) {
+    if (!userId || !username) {
         res.status(400).json({ error: "User ID and username are required" });
         return;
     }
     try {
-        const friendRows = yield firebase_1.db.collection("requests")
-            .where("status", "==", "pending")
-            .where("senderId", "==", userID)
+        const requestSnapshot = yield firebase_1.db.collection("friendRequests")
+            .where("senderId", "==", userId)
             .where("receiverId", "==", username)
+            .where("status", "==", "pending")
             .get();
-        if (friendRows.empty) {
-            res.status(404).json({ error: "Friend request not found" });
+        if (requestSnapshot.empty) {
+            res.status(404).json({ error: "Pending request not found" });
             return;
         }
         const batch = firebase_1.db.batch();
-        friendRows.forEach(doc => batch.delete(doc.ref));
+        requestSnapshot.forEach(doc => batch.delete(doc.ref));
         yield batch.commit();
-        res.status(200).json({ success: true, message: "Friend request removed successfully" });
+        res.status(200).json({ message: "Friend request removed" });
         return;
     }
     catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: "Error removing friend request" });
+        return;
     }
 });
 exports.removePending = removePending;
+/** List pending friend requests */
 const listPending = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { userID } = req.body;
-    if (!userID) {
+    const { userId } = req.body;
+    if (!userId) {
         res.status(400).json({ error: "User ID is required" });
         return;
     }
     try {
         const pending = [];
-        const senderPending = yield firebase_1.db.collection("requests")
+        const pendingSnapshot = yield firebase_1.db.collection("friendRequests")
+            .where("receiverId", "==", userId)
             .where("status", "==", "pending")
-            .where("senderId", "==", userID)
             .get();
-        const receiverPending = yield firebase_1.db.collection("requests")
-            .where("status", "==", "pending")
-            .where("receiverId", "==", userID)
-            .get();
-        if (senderPending.empty && receiverPending.empty) {
-            res.status(404).json({ error: "No pending requests found" });
-            return;
-        }
-        senderPending.forEach(doc => {
-            pending.push(doc.data().receiverId);
-        });
-        receiverPending.forEach(doc => {
+        pendingSnapshot.forEach(doc => {
             pending.push(doc.data().senderId);
         });
         res.status(200).json({ pending });
         return;
     }
     catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: "Error retrieving pending requests" });
+        return;
     }
 });
 exports.listPending = listPending;
+/** Accept a friend request */
 const acceptFriendReq = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { senderId, receiverId } = req.body;
     if (!senderId || !receiverId) {
@@ -170,25 +162,30 @@ const acceptFriendReq = (req, res) => __awaiter(void 0, void 0, void 0, function
         return;
     }
     try {
-        const req = yield firebase_1.db.collection("requests")
-            .where("status", "==", "pending")
+        const requestSnapshot = yield firebase_1.db.collection("friendRequests")
             .where("senderId", "==", senderId)
             .where("receiverId", "==", receiverId)
+            .where("status", "==", "pending")
             .get();
-        if (req.empty) {
+        if (requestSnapshot.empty) {
             res.status(404).json({ error: "Friend request not found" });
             return;
         }
-        const docId = req.docs[0].id;
-        yield firebase_1.db.collection("requests").doc(docId).update({ status: "accepted" });
-        res.status(200).json({ success: true, message: "Friend request accepted" });
+        const requestDoc = requestSnapshot.docs[0];
+        yield requestDoc.ref.update({ status: "accepted" });
+        yield firebase_1.db.collection("friends").add({
+            users: [senderId, receiverId],
+        });
+        res.status(200).json({ message: "Friend request accepted" });
         return;
     }
     catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: "Error accepting friend request" });
+        return;
     }
 });
 exports.acceptFriendReq = acceptFriendReq;
+/** Reject a friend request */
 const rejectFriendReq = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { senderId, receiverId } = req.body;
     if (!senderId || !receiverId) {
@@ -196,22 +193,23 @@ const rejectFriendReq = (req, res) => __awaiter(void 0, void 0, void 0, function
         return;
     }
     try {
-        const req = yield firebase_1.db.collection("requests")
-            .where("status", "==", "pending")
+        const requestSnapshot = yield firebase_1.db.collection("friendRequests")
             .where("senderId", "==", senderId)
             .where("receiverId", "==", receiverId)
+            .where("status", "==", "pending")
             .get();
-        if (req.empty) {
+        if (requestSnapshot.empty) {
             res.status(404).json({ error: "Friend request not found" });
             return;
         }
-        const docId = req.docs[0].id;
-        yield firebase_1.db.collection("requests").doc(docId).update({ status: "rejected" });
-        res.status(200).json({ success: true, message: "Friend request rejected" });
+        const requestDoc = requestSnapshot.docs[0];
+        yield requestDoc.ref.update({ status: "rejected" });
+        res.status(200).json({ message: "Friend request rejected" });
         return;
     }
     catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: "Error rejecting friend request" });
+        return;
     }
 });
 exports.rejectFriendReq = rejectFriendReq;

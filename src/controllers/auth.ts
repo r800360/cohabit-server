@@ -37,14 +37,14 @@ function checkTokenType(token: string): void {
 // const token: string = "your_jwt_token_here"; // Replace with actual token
 // checkTokenType(token);
 
-export const validateGoogleAuthToken = async (req: Request, res: Response) => {
+export const validateFirebaseAuthToken = async (req: Request, res: Response) => {
     const { idToken } = req.body;
 
     checkTokenType(idToken);
 
     try {
         // Verify the ID token and extract user information
-        const decodedToken = await auth.verifyIdToken(idToken);
+        const decodedToken = await auth.verifyIdToken(idToken, true);
         const uid = decodedToken.uid;
 
         // Retrieve the user record from Firebase Auth
@@ -58,7 +58,6 @@ export const validateGoogleAuthToken = async (req: Request, res: Response) => {
         // Query Firestore for a user with this email
         const userDoc = await db.collection("users").where("email", "==", email).get();
 
-        
         res.json({ exists: !userDoc.empty });
         return;
 

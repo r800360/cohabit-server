@@ -41,6 +41,6 @@ const AuthController = __importStar(require("../controllers/auth"));
 const router = express_1.default.Router();
 router.get("/google", AuthController.initiateGoogleAuth);
 router.get("/callback", AuthController.handleOAuthCallback);
-router.post("/google", AuthController.validateGoogleAuthToken);
+router.post("/google", AuthController.validateFirebaseAuthToken);
 exports.default = router;
 //# sourceMappingURL=auth.js.map

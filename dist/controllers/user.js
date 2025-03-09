@@ -9,8 +9,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getHabits = exports.deleteUser = exports.deleteUserByEmail = exports.updateUserByEmail = exports.updateUser = exports.createUser = exports.checkUserExists = exports.fetchUserById = exports.fetchUserByName = exports.fetchUserByEmail = exports.getAllUsers = exports.debugRoute = void 0;
+exports.deleteUserByEmail = exports.updateUser = exports.createUser = exports.checkUserExists = exports.fetchUserById = exports.fetchUserByName = exports.fetchUserByEmail = exports.getAllUsers = exports.debugRoute = void 0;
 const firebase_1 = require("../config/firebase");
+const auth_1 = require("../utils/auth");
 const debugRoute = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const snapshot = yield firebase_1.db.collection("users").limit(1).get();
@@ -33,6 +34,8 @@ const getAllUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 });
 exports.getAllUsers = getAllUsers;
 const fetchUserByEmail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!(yield (0, auth_1.requireSignedIn)(req, res)))
+        return;
     const { email } = req.params;
     try {
         const snapshot = yield firebase_1.db.collection("users").where("email", "==", email).get();
@@ -51,6 +54,8 @@ const fetchUserByEmail = (req, res) => __awaiter(void 0, void 0, void 0, functio
 });
 exports.fetchUserByEmail = fetchUserByEmail;
 const fetchUserByName = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!(yield (0, auth_1.requireSignedIn)(req, res)))
+        return;
     const { name } = req.params;
     try {
         const snapshot = yield firebase_1.db.collection("users").where("name", "==", name).get();
@@ -67,6 +72,8 @@ const fetchUserByName = (req, res) => __awaiter(void 0, void 0, void 0, function
 });
 exports.fetchUserByName = fetchUserByName;
 const fetchUserById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!(yield (0, auth_1.requireSignedIn)(req, res)))
+        return;
     const { id } = req.params;
     try {
         const userDoc = yield firebase_1.db.collection("users").doc(id).get();
@@ -83,6 +90,8 @@ const fetchUserById = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.fetchUserById = fetchUserById;
 const checkUserExists = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!(yield (0, auth_1.requireSignedIn)(req, res)))
+        return;
     const { email } = req.body;
     const userRef = firebase_1.db.collection("users").where("email", "==", email);
     const snapshot = yield userRef.get();
@@ -127,31 +136,16 @@ const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 });
 exports.createUser = createUser;
 const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { firebaseId, updates } = req.body;
-    if (!firebaseId || !updates) {
-        res.status(400).json({ message: "User ID and updates are required" });
+    const user = yield (0, auth_1.requireSignedIn)(req, res);
+    if (!user)
         return;
-    }
-    try {
-        const userRef = firebase_1.db.collection("users").doc(firebaseId);
-        yield userRef.update(updates);
-        res.status(200).json({ message: "User updated successfully" });
-        return;
-    }
-    catch (error) {
-        res.status(500).json({ error: "Error updating user" });
-        return;
-    }
-});
-exports.updateUser = updateUser;
-const updateUserByEmail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { email, updates } = req.body;
-    if (!email || !updates) {
+    const { updates } = req.body;
+    if (!updates) {
         res.status(400).json({ message: "Email and updates are required" });
         return;
     }
     try {
-        const userSnapshot = yield firebase_1.db.collection("users").where("email", "==", email).get();
+        const userSnapshot = yield firebase_1.db.collection("users").where("email", "==", user.email).get();
         if (userSnapshot.empty) {
             res.status(404).json({ message: "User not found" });
             return;
@@ -163,18 +157,17 @@ const updateUserByEmail = (req, res) => __awaiter(void 0, void 0, void 0, functi
     }
     catch (error) {
         res.status(500).json({ error: "Error updating user" });
+        console.error("Error updating user:", error);
         return;
     }
 });
-exports.updateUserByEmail = updateUserByEmail;
+exports.updateUser = updateUser;
 const deleteUserByEmail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { email } = req.body;
-    if (!email) {
-        res.status(400).json({ message: "Email is required" });
+    const user = yield (0, auth_1.requireSignedIn)(req, res);
+    if (!user)
         return;
-    }
     try {
-        const userSnapshot = yield firebase_1.db.collection("users").where("email", "==", email).get();
+        const userSnapshot = yield firebase_1.db.collection("users").where("email", "==", user.email).get();
         if (userSnapshot.empty) {
             res.status(404).json({ message: "User not found" });
             return;
@@ -188,45 +181,9 @@ const deleteUserByEmail = (req, res) => __awaiter(void 0, void 0, void 0, functi
     }
     catch (error) {
         res.status(500).json({ error: "Error deleting user by email" });
+        console.error("Error deleting user:", error);
         return;
     }
 });
 exports.deleteUserByEmail = deleteUserByEmail;
-const deleteUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { firebaseId } = req.body;
-    if (!firebaseId) {
-        res.status(400).json({ message: "User ID is required" });
-        return;
-    }
-    try {
-        yield firebase_1.db.collection("users").doc(firebaseId).delete();
-        yield firebase_1.auth.deleteUser(firebaseId);
-        res.status(200).json({ message: "User deleted successfully" });
-        return;
-    }
-    catch (error) {
-        res.status(500).json({ error: "Error deleting user" });
-        return;
-    }
-});
-exports.deleteUser = deleteUser;
-const getHabits = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { email } = req.body;
-    try {
-        const userSnapshot = yield firebase_1.db.collection("users").where("email", "==", email).get();
-        if (userSnapshot.empty) {
-            res.status(404).json({ message: "User not found" });
-            return;
-        }
-        const userDoc = userSnapshot.docs[0];
-        const habitList = userDoc.data().habitList || [];
-        res.status(200).json(habitList);
-        return;
-    }
-    catch (error) {
-        res.status(500).json({ error: "Error retrieving habits" });
-        return;
-    }
-});
-exports.getHabits = getHabits;
 //# sourceMappingURL=user.js.map

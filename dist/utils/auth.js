@@ -22,6 +22,7 @@ const firebase_1 = require("../config/firebase");
  */
 function requireSignedIn(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        // TODO consider caching valid tokens to reduce response time and Firebase load
         const authorization = req.headers.authorization;
         if (!/^Token [a-zA-Z\.]+$/.test(authorization)) {
             res.status(403).json({ error: "Malformed or missing Authorization token" });

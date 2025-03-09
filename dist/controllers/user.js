@@ -107,17 +107,13 @@ const checkUserExists = (req, res) => __awaiter(void 0, void 0, void 0, function
 exports.checkUserExists = checkUserExists;
 const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        let { firebaseId, name, email } = req.body;
+        let { name, email } = req.body;
         if (!email.endsWith("@ucsd.edu")) {
             res.status(403).json({ message: "Only UCSD emails allowed" });
             return;
         }
-        if (!firebaseId) {
-            firebaseId = firebase_1.db.collection("users").doc().id;
-        }
-        const userDoc = firebase_1.db.collection("users").doc(firebaseId);
-        yield userDoc.set({
-            firebaseId,
+        const userDoc = firebase_1.db.collection("users").doc(email.split("@")[0]);
+        yield userDoc.create({
             name,
             email,
             friendList: [],

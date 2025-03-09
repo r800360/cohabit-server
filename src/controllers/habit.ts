@@ -109,7 +109,8 @@ export const createHabit = async (req: Request, res: Response) => {
 export const updateHabit = async (req: Request, res: Response) => {
   const user = await requireSignedIn(req, res);
   if (!user) return;
-  const { habitId, updates } = req.body;
+  const { updates } = req.body;
+  const { habitId } = req.params;
 
   if (!habitId || !updates) {
     res.status(400).json({ error: "Habit ID and updates are required" });
@@ -140,7 +141,7 @@ export const deleteHabit = async (req: Request, res: Response) => {
   const user = await requireSignedIn(req, res);
   if (!user) return;
 
-  const { habitId } = req.body;
+  const { habitId } = req.params;
 
   if (!habitId) {
     res.status(400).json({ error: "Habit ID is required" });

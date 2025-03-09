@@ -12,6 +12,7 @@ import { Request, Response } from "express";
  * @returns The decoded authorization token, or `null` if the token was rejected or missing (in which case the calling function should return)
  */
 export async function requireSignedIn(req: Request, res: Response): Promise<(DecodedIdToken & { email: string }) | null> {
+  // TODO consider caching valid tokens to reduce response time and Firebase load
   const authorization = req.headers.authorization;
   if (!/^Token [a-zA-Z\.]+$/.test(authorization)) {
     res.status(403).json({ error: "Malformed or missing Authorization token" });

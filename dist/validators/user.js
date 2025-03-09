@@ -6,7 +6,6 @@ exports.validateUserId = [
     (0, express_validator_1.body)("userId").notEmpty().withMessage("User ID is required"),
 ];
 exports.validateUserCreation = [
-    (0, express_validator_1.body)("firebaseId").notEmpty().withMessage("Firebase ID is required"),
     (0, express_validator_1.body)("name").notEmpty().withMessage("Name is required"),
     (0, express_validator_1.body)("email")
         .isEmail()

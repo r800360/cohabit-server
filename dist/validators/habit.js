@@ -19,11 +19,11 @@ exports.validateHabitCreation = [
         .withMessage("Invalid privacy setting"),
 ];
 exports.validateHabitUpdate = [
-    (0, express_validator_1.body)("habitId").notEmpty().withMessage("Habit ID is required"),
+    (0, express_validator_1.param)("habitId").notEmpty().withMessage("Habit ID is required"),
     (0, express_validator_1.body)("updates").notEmpty().withMessage("Updates object is required"),
     // TODO validate body of updates to prevent storing arbitrary data
 ];
 exports.validateHabitDeletion = [
-    (0, express_validator_1.body)("habitId").notEmpty().withMessage("Habit ID is required"),
+    (0, express_validator_1.param)("habitId").notEmpty().withMessage("Habit ID is required"),
 ];
 //# sourceMappingURL=habit.js.map

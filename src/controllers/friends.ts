@@ -1,5 +1,11 @@
 import { Request, Response } from "express";
 import { db } from "../config/firebase";
+import { DecodedIdToken } from "firebase-admin/lib/auth/token-verifier";
+import { requireSignedIn } from "../utils/auth";
+
+async function getUserIdFromToken(token: DecodedIdToken & { email: string }): Promise<string> {
+  return token.email.split("@")[0];
+}
 
 /** Get the list of friends for a user */
 export const fetchFriends = async (req: Request, res: Response) => {
@@ -33,7 +39,10 @@ export const fetchFriends = async (req: Request, res: Response) => {
 
 /** Remove a friend */
 export const removeFriend = async (req: Request, res: Response) => {
-  const { userId } = req.body;
+  const user = await requireSignedIn(req, res);
+  if (!user) return;
+  const userId = await getUserIdFromToken(user);
+
   const { username } = req.params;
 
   if (!userId || !username) {
@@ -65,7 +74,11 @@ export const removeFriend = async (req: Request, res: Response) => {
 
 /** Create a friend request */
 export const createFriendRequest = async (req: Request, res: Response) => {
-  const { senderId, receiverId } = req.body;
+  const user = await requireSignedIn(req, res);
+  if (!user) return;
+  const senderId = await getUserIdFromToken(user);
+
+  const { receiverId } = req.body;
 
   if (!senderId || !receiverId) {
     res.status(400).json({ error: "Sender ID and Receiver ID are required" });
@@ -104,9 +117,11 @@ export const createFriendRequest = async (req: Request, res: Response) => {
 
 /** Remove a pending friend request */
 export const removePending = async (req: Request, res: Response) => {
-  const { userId } = req.body;
-  const { username } = req.params;
+  const user = await requireSignedIn(req, res);
+  if (!user) return;
+  const userId = await getUserIdFromToken(user);
 
+  const { username } = req.params;
   if (!userId || !username) {
     res.status(400).json({ error: "User ID and username are required" });
     return;
@@ -138,12 +153,9 @@ export const removePending = async (req: Request, res: Response) => {
 
 /** List pending friend requests */
 export const fetchPending = async (req: Request, res: Response) => {
-  const { userId } = req.body;
-
-  if (!userId) {
-    res.status(400).json({ error: "User ID is required" });
-    return;
-  }
+  const user = await requireSignedIn(req, res);
+  if (!user) return;
+  const userId = await getUserIdFromToken(user);
 
   try {
     const pending: string[] = [];
@@ -167,7 +179,10 @@ export const fetchPending = async (req: Request, res: Response) => {
 
 /** Accept a friend request */
 export const acceptFriendRequest = async (req: Request, res: Response) => {
-  const { senderId, receiverId } = req.body;
+  const user = await requireSignedIn(req, res);
+  if (!user) return;
+  const senderId = await getUserIdFromToken(user);
+  const { receiverId } = req.body;
 
   if (!senderId || !receiverId) {
     res.status(400).json({ error: "Sender ID and Receiver ID are required" });
@@ -204,7 +219,10 @@ export const acceptFriendRequest = async (req: Request, res: Response) => {
 
 /** Reject a friend request */
 export const rejectFriendRequest = async (req: Request, res: Response) => {
-  const { senderId, receiverId } = req.body;
+  const user = await requireSignedIn(req, res);
+  if (!user) return;
+  const senderId = await getUserIdFromToken(user);
+  const { receiverId } = req.body;
 
   if (!senderId || !receiverId) {
     res.status(400).json({ error: "Sender ID and Receiver ID are required" });
@@ -236,7 +254,11 @@ export const rejectFriendRequest = async (req: Request, res: Response) => {
 
 /** Cancel a friend request */
 export const cancelFriendRequest = async (req: Request, res: Response) => {
-  const { senderId, receiverId } = req.body;
+  const user = await requireSignedIn(req, res);
+  if (!user) return;
+  const senderId = await getUserIdFromToken(user);
+
+  const { receiverId } = req.body;
   if (!senderId || !receiverId) {
     res.status(400).json({ error: "Sender and Receiver ID are required" });
     return;

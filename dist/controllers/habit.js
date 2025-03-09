@@ -99,7 +99,8 @@ const updateHabit = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     const user = yield (0, auth_1.requireSignedIn)(req, res);
     if (!user)
         return;
-    const { habitId, updates } = req.body;
+    const { updates } = req.body;
+    const { habitId } = req.params;
     if (!habitId || !updates) {
         res.status(400).json({ error: "Habit ID and updates are required" });
         return;
@@ -126,7 +127,7 @@ const deleteHabit = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     const user = yield (0, auth_1.requireSignedIn)(req, res);
     if (!user)
         return;
-    const { habitId } = req.body;
+    const { habitId } = req.params;
     if (!habitId) {
         res.status(400).json({ error: "Habit ID is required" });
         return;

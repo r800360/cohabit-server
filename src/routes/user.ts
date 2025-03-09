@@ -14,15 +14,11 @@ router.get("/:id", UserController.fetchUserById);
 router.get("/", UserController.getAllUsers);
 router.post("/", UserValidator.validateUserCreation, UserController.createUser);
 router.post("/signup", UserController.createUser);
-router.put("/", UserController.updateUser);
-router.delete("/", UserValidator.validateEmail, UserController.deleteUser);
-router.delete("/email/:email", UserValidator.validateEmail, UserController.deleteUserByEmail);
-
-// Habits related to user
-router.get("/:id/habits", UserValidator.validateUserId, UserController.getHabits);
-router.post("/getHabits", UserValidator.validateEmail, UserController.getHabits);
+router.patch("/", UserController.updateUser);
+router.delete("/", UserController.deleteUserByEmail);
 
 // Debugging
+// TODO restrict access to debugging operations
 router.get("/test-db", UserController.debugRoute);
 router.post("/check", UserValidator.validateEmail, UserController.checkUserExists);
 router.delete("/email", UserValidator.validateEmail, UserController.deleteUserByEmail);

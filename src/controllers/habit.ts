@@ -1,9 +1,12 @@
 import { Request, Response } from "express";
 import { db } from "../config/firebase";
-import { firestore } from "firebase-admin";
 import { Habit } from "../models/habit";
+import { requireSignedIn } from "../utils/auth";
 
 export const getAllHabits = async (req: Request, res: Response) => {
+  const token = await requireSignedIn(req, res);
+  if (token === null) return;
+
   const { email } = req.query;
 
   if (!email || typeof email !== "string") {
@@ -12,6 +15,7 @@ export const getAllHabits = async (req: Request, res: Response) => {
   }
 
   try {
+    // TODO restrict visibility
     const habitSnapshot = await db.collection("habits").where("email", "==", email).get();
 
     if (habitSnapshot.empty) {
@@ -33,6 +37,9 @@ export const getAllHabits = async (req: Request, res: Response) => {
 };
 
 export const getHabitById = async (req: Request, res: Response) => {
+  const user = await requireSignedIn(req, res);
+  if (user === null) return;
+
   const { habitId } = req.params;
 
   if (!habitId) {
@@ -65,17 +72,20 @@ export const getHabitById = async (req: Request, res: Response) => {
 };
 
 export const createHabit = async (req: Request, res: Response) => {
-  const { firebaseId, email, title, description, startDate, endDate, reminderTime, reminderDays, streaks, privacy } = req.body;
+  const user = await requireSignedIn(req, res);
+  if (!user) return;
 
-  if (!email || !title) {
-    res.status(400).json({ error: "Email and title are required" });
+  const { firebaseId, title, description, startDate, endDate, reminderTime, reminderDays, streaks, privacy } = req.body;
+
+  if (!title) {
+    res.status(400).json({ error: "Title are required" });
     return;
   }
 
   try {
     const newHabit: Habit = {
       firebaseId: firebaseId || db.collection("habits").doc().id,
-      email,
+      email: user.email,
       title,
       description: description || "",
       startDate: new Date(startDate),
@@ -97,6 +107,8 @@ export const createHabit = async (req: Request, res: Response) => {
 };
 
 export const updateHabit = async (req: Request, res: Response) => {
+  const user = await requireSignedIn(req, res);
+  if (!user) return;
   const { habitId, updates } = req.body;
 
   if (!habitId || !updates) {
@@ -108,7 +120,8 @@ export const updateHabit = async (req: Request, res: Response) => {
     const habitRef = db.collection("habits").doc(habitId);
     const habitDoc = await habitRef.get();
 
-    if (!habitDoc.exists) {
+    if (!habitDoc.exists || habitDoc.get("email") !== user.email) {
+      // The user should not even be aware that another user's habit exists with this ID
       res.status(404).json({ error: "Habit not found" });
       return;
     }
@@ -124,6 +137,9 @@ export const updateHabit = async (req: Request, res: Response) => {
 };
 
 export const deleteHabit = async (req: Request, res: Response) => {
+  const user = await requireSignedIn(req, res);
+  if (!user) return;
+
   const { habitId } = req.body;
 
   if (!habitId) {
@@ -135,7 +151,7 @@ export const deleteHabit = async (req: Request, res: Response) => {
     const habitRef = db.collection("habits").doc(habitId);
     const habitDoc = await habitRef.get();
 
-    if (!habitDoc.exists) {
+    if (!habitDoc.exists || habitDoc.get("email") !== user.email) {
       res.status(404).json({ error: "Habit not found" });
       return;
     }
@@ -176,21 +192,24 @@ export const fetchHabitStreaks = async (req: Request, res: Response) => {
   
   /** Mark habit as complete */
   export const markHabitComplete = async (req: Request, res: Response) => {
+    const user = await requireSignedIn(req, res);
+    if (!user) return;
+
     const { id, date } = req.body;
     if (!id || !date) {
         res.status(400).json({ error: "Habit ID and date are required" });
         return;
     } 
-  
+
     try {
       const habitRef = db.collection("habits").doc(id);
       const habitDoc = await habitRef.get();
-  
-      if (!habitDoc.exists) {
+
+      if (!habitDoc.exists || habitDoc.get("email") !== user.email) {
         res.status(404).json({ error: "Habit not found" });
         return;
       }
-  
+
       const habitData = habitDoc.data();
       const updatedStreaks = [...(habitData?.streaks || []), date];
   
@@ -205,6 +224,9 @@ export const fetchHabitStreaks = async (req: Request, res: Response) => {
   
   /** Mark habit as missed */
   export const markHabitMissed = async (req: Request, res: Response) => {
+    const user = await requireSignedIn(req, res);
+    if (!user) return;
+
     const { id, date } = req.body;
     if (!id || !date) {
         res.status(400).json({ error: "Habit ID and date are required" });
@@ -215,7 +237,7 @@ export const fetchHabitStreaks = async (req: Request, res: Response) => {
       const habitRef = db.collection("habits").doc(id);
       const habitDoc = await habitRef.get();
   
-      if (!habitDoc.exists) {
+      if (!habitDoc.exists || habitDoc.get("email") !== user.email) {
         res.status(404).json({ error: "Habit not found" });
         return;
       }

@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { db, auth } from "../config/firebase";
+import { requireSignedIn } from "../utils/auth";
 
 export const debugRoute = async (req: Request, res: Response) => {
   try {
@@ -22,6 +23,8 @@ export const getAllUsers = async (req: Request, res: Response) => {
 };
 
 export const fetchUserByEmail = async (req: Request, res: Response) => {
+  if (!await requireSignedIn(req, res)) return;
+
   const { email } = req.params;
   try {
     const snapshot = await db.collection("users").where("email", "==", email).get();
@@ -40,6 +43,8 @@ export const fetchUserByEmail = async (req: Request, res: Response) => {
 };
 
 export const fetchUserByName = async (req: Request, res: Response) => {
+  if (!await requireSignedIn(req, res)) return;
+
   const { name } = req.params;
   try {
     const snapshot = await db.collection("users").where("name", "==", name).get();
@@ -56,6 +61,7 @@ export const fetchUserByName = async (req: Request, res: Response) => {
 };
 
 export const fetchUserById = async (req: Request, res: Response) => {
+  if (!await requireSignedIn(req, res)) return;
   const { id } = req.params;
   try {
     const userDoc = await db.collection("users").doc(id).get();
@@ -71,6 +77,7 @@ export const fetchUserById = async (req: Request, res: Response) => {
 };
 
 export const checkUserExists = async (req: Request, res: Response) => {
+  if (!await requireSignedIn(req, res)) return;
   const { email } = req.body;
   const userRef = db.collection("users").where("email", "==", email);
   const snapshot = await userRef.get();
@@ -86,19 +93,14 @@ export const checkUserExists = async (req: Request, res: Response) => {
 
 export const createUser = async (req: Request, res: Response) => {
   try {
-    let { firebaseId, name, email } = req.body;
+    let { name, email } = req.body;
     if (!email.endsWith("@ucsd.edu")) {
       res.status(403).json({ message: "Only UCSD emails allowed" });
       return;
     }
 
-    if (!firebaseId) {
-      firebaseId = db.collection("users").doc().id;
-    }
-
-    const userDoc = db.collection("users").doc(firebaseId);
-    await userDoc.set({
-      firebaseId,
+    const userDoc = db.collection("users").doc((email as string).split("@")[0]);
+    await userDoc.create({
       name,
       email,
       friendList: [],
@@ -117,35 +119,18 @@ export const createUser = async (req: Request, res: Response) => {
 };
 
 export const updateUser = async (req: Request, res: Response) => {
-  const { firebaseId, updates } = req.body;
+  const user = await requireSignedIn(req, res);
+  if (!user) return;
 
-  if (!firebaseId || !updates) {
-    res.status(400).json({ message: "User ID and updates are required" });
-    return;
-  }
+  const { updates } = req.body;
 
-  try {
-    const userRef = db.collection("users").doc(firebaseId);
-    await userRef.update(updates);
-
-    res.status(200).json({ message: "User updated successfully" });
-    return;
-  } catch (error) {
-    res.status(500).json({ error: "Error updating user" });
-    return;
-  }
-};
-
-export const updateUserByEmail = async (req: Request, res: Response) => {
-  const { email, updates } = req.body;
-
-  if (!email || !updates) {
+  if (!updates) {
     res.status(400).json({ message: "Email and updates are required" });
     return;
   }
 
   try {
-    const userSnapshot = await db.collection("users").where("email", "==", email).get();
+    const userSnapshot = await db.collection("users").where("email", "==", user.email).get();
 
     if (userSnapshot.empty) {
       res.status(404).json({ message: "User not found" });
@@ -159,20 +144,17 @@ export const updateUserByEmail = async (req: Request, res: Response) => {
     return;
   } catch (error) {
     res.status(500).json({ error: "Error updating user" });
+    console.error("Error updating user:", error);
     return;
   }
 };
 
 export const deleteUserByEmail = async (req: Request, res: Response) => {
-  const { email } = req.body;
-
-  if (!email) {
-    res.status(400).json({ message: "Email is required" });
-    return;
-  }
+  const user = await requireSignedIn(req, res);
+  if (!user) return;
 
   try {
-    const userSnapshot = await db.collection("users").where("email", "==", email).get();
+    const userSnapshot = await db.collection("users").where("email", "==", user.email).get();
     if (userSnapshot.empty) {
       res.status(404).json({ message: "User not found" });
       return;
@@ -188,48 +170,7 @@ export const deleteUserByEmail = async (req: Request, res: Response) => {
     return;
   } catch (error) {
     res.status(500).json({ error: "Error deleting user by email" });
-    return;
-  }
-};
-
-export const deleteUser = async (req: Request, res: Response) => {
-  const { firebaseId } = req.body;
-
-  if (!firebaseId) {
-    res.status(400).json({ message: "User ID is required" });
-    return;
-  }
-
-  try {
-    await db.collection("users").doc(firebaseId).delete();
-    await auth.deleteUser(firebaseId);
-
-    res.status(200).json({ message: "User deleted successfully" });
-    return;
-  } catch (error) {
-    res.status(500).json({ error: "Error deleting user" });
-    return;
-  }
-};
-
-
-export const getHabits = async (req: Request, res: Response) => {
-  const { email } = req.body;
-
-  try {
-    const userSnapshot = await db.collection("users").where("email", "==", email).get();
-    if (userSnapshot.empty) {
-      res.status(404).json({ message: "User not found" });
-      return;
-    }
-
-    const userDoc = userSnapshot.docs[0];
-    const habitList = userDoc.data().habitList || [];
-
-    res.status(200).json(habitList);
-    return;
-  } catch (error) {
-    res.status(500).json({ error: "Error retrieving habits" });
+    console.error("Error deleting user:", error);
     return;
   }
 };

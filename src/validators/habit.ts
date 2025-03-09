@@ -10,7 +10,6 @@ export const validateHabitId = [
 
 export const validateHabitCreation = [
   body("id").optional().isString().withMessage("Invalid habit ID"),
-  body("email").isEmail().withMessage("Valid email is required"),
   body("title").notEmpty().withMessage("Title is required"),
   body("startDate").isISO8601().withMessage("Start date must be a valid date"),
   body("endDate").isISO8601().withMessage("End date must be a valid date"),
@@ -21,10 +20,11 @@ export const validateHabitCreation = [
 ];
 
 export const validateHabitUpdate = [
-  body("habitId").notEmpty().withMessage("Habit ID is required"),
+  param("habitId").notEmpty().withMessage("Habit ID is required"),
   body("updates").notEmpty().withMessage("Updates object is required"),
+  // TODO validate body of updates to prevent storing arbitrary data
 ];
 
 export const validateHabitDeletion = [
-  body("habitId").notEmpty().withMessage("Habit ID is required"),
+  param("habitId").notEmpty().withMessage("Habit ID is required"),
 ];

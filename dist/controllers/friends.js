@@ -11,6 +11,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.cancelFriendRequest = exports.rejectFriendRequest = exports.acceptFriendRequest = exports.fetchPending = exports.removePending = exports.createFriendRequest = exports.removeFriend = exports.fetchFriends = void 0;
 const firebase_1 = require("../config/firebase");
+const auth_1 = require("../utils/auth");
+function getUserIdFromToken(token) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return token.email.split("@")[0];
+    });
+}
 /** Get the list of friends for a user */
 const fetchFriends = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { userId } = req.body;
@@ -40,7 +46,10 @@ const fetchFriends = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 exports.fetchFriends = fetchFriends;
 /** Remove a friend */
 const removeFriend = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { userId } = req.body;
+    const user = yield (0, auth_1.requireSignedIn)(req, res);
+    if (!user)
+        return;
+    const userId = yield getUserIdFromToken(user);
     const { username } = req.params;
     if (!userId || !username) {
         res.status(400).json({ error: "User ID and username are required" });
@@ -67,7 +76,11 @@ const removeFriend = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 exports.removeFriend = removeFriend;
 /** Create a friend request */
 const createFriendRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { senderId, receiverId } = req.body;
+    const user = yield (0, auth_1.requireSignedIn)(req, res);
+    if (!user)
+        return;
+    const senderId = yield getUserIdFromToken(user);
+    const { receiverId } = req.body;
     if (!senderId || !receiverId) {
         res.status(400).json({ error: "Sender ID and Receiver ID are required" });
         return;
@@ -101,7 +114,10 @@ const createFriendRequest = (req, res) => __awaiter(void 0, void 0, void 0, func
 exports.createFriendRequest = createFriendRequest;
 /** Remove a pending friend request */
 const removePending = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { userId } = req.body;
+    const user = yield (0, auth_1.requireSignedIn)(req, res);
+    if (!user)
+        return;
+    const userId = yield getUserIdFromToken(user);
     const { username } = req.params;
     if (!userId || !username) {
         res.status(400).json({ error: "User ID and username are required" });
@@ -131,11 +147,10 @@ const removePending = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 exports.removePending = removePending;
 /** List pending friend requests */
 const fetchPending = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { userId } = req.body;
-    if (!userId) {
-        res.status(400).json({ error: "User ID is required" });
+    const user = yield (0, auth_1.requireSignedIn)(req, res);
+    if (!user)
         return;
-    }
+    const userId = yield getUserIdFromToken(user);
     try {
         const pending = [];
         const pendingSnapshot = yield firebase_1.db.collection("friendRequests")
@@ -156,7 +171,11 @@ const fetchPending = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 exports.fetchPending = fetchPending;
 /** Accept a friend request */
 const acceptFriendRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { senderId, receiverId } = req.body;
+    const user = yield (0, auth_1.requireSignedIn)(req, res);
+    if (!user)
+        return;
+    const senderId = yield getUserIdFromToken(user);
+    const { receiverId } = req.body;
     if (!senderId || !receiverId) {
         res.status(400).json({ error: "Sender ID and Receiver ID are required" });
         return;
@@ -187,7 +206,11 @@ const acceptFriendRequest = (req, res) => __awaiter(void 0, void 0, void 0, func
 exports.acceptFriendRequest = acceptFriendRequest;
 /** Reject a friend request */
 const rejectFriendRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { senderId, receiverId } = req.body;
+    const user = yield (0, auth_1.requireSignedIn)(req, res);
+    if (!user)
+        return;
+    const senderId = yield getUserIdFromToken(user);
+    const { receiverId } = req.body;
     if (!senderId || !receiverId) {
         res.status(400).json({ error: "Sender ID and Receiver ID are required" });
         return;
@@ -215,7 +238,11 @@ const rejectFriendRequest = (req, res) => __awaiter(void 0, void 0, void 0, func
 exports.rejectFriendRequest = rejectFriendRequest;
 /** Cancel a friend request */
 const cancelFriendRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { senderId, receiverId } = req.body;
+    const user = yield (0, auth_1.requireSignedIn)(req, res);
+    if (!user)
+        return;
+    const senderId = yield getUserIdFromToken(user);
+    const { receiverId } = req.body;
     if (!senderId || !receiverId) {
         res.status(400).json({ error: "Sender and Receiver ID are required" });
         return;

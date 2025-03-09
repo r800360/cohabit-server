@@ -5,7 +5,6 @@ export const validateUserId = [
 ];
 
 export const validateFriendRequest = [
-  body("senderId").notEmpty().withMessage("Sender ID is required"),
   body("receiverId")
     .notEmpty()
     .withMessage("Receiver ID is required")
@@ -18,16 +17,13 @@ export const validateFriendRequest = [
 ];
 
 export const validateRemoveFriend = [
-  body("userId").notEmpty().withMessage("User ID is required"),
   param("username").notEmpty().withMessage("Username is required"),
 ];
 
 export const validatePendingRemoval = [
-  body("userId").notEmpty().withMessage("User ID is required"),
   param("username").notEmpty().withMessage("Username is required"),
 ];
 
 export const validateAcceptRejectRequest = [
-  body("senderId").notEmpty().withMessage("Sender ID is required"),
   body("receiverId").notEmpty().withMessage("Receiver ID is required"),
 ];

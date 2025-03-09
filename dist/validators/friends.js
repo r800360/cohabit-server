@@ -6,7 +6,6 @@ exports.validateUserId = [
     (0, express_validator_1.body)("userId").notEmpty().withMessage("User ID is required"),
 ];
 exports.validateFriendRequest = [
-    (0, express_validator_1.body)("senderId").notEmpty().withMessage("Sender ID is required"),
     (0, express_validator_1.body)("receiverId")
         .notEmpty()
         .withMessage("Receiver ID is required")
@@ -18,15 +17,12 @@ exports.validateFriendRequest = [
     }),
 ];
 exports.validateRemoveFriend = [
-    (0, express_validator_1.body)("userId").notEmpty().withMessage("User ID is required"),
     (0, express_validator_1.param)("username").notEmpty().withMessage("Username is required"),
 ];
 exports.validatePendingRemoval = [
-    (0, express_validator_1.body)("userId").notEmpty().withMessage("User ID is required"),
     (0, express_validator_1.param)("username").notEmpty().withMessage("Username is required"),
 ];
 exports.validateAcceptRejectRequest = [
-    (0, express_validator_1.body)("senderId").notEmpty().withMessage("Sender ID is required"),
     (0, express_validator_1.body)("receiverId").notEmpty().withMessage("Receiver ID is required"),
 ];
 //# sourceMappingURL=friends.js.map

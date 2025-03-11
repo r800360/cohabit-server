@@ -6,7 +6,7 @@ const router = express.Router();
 
 // Fetching friends and requests
 router.get("/", FriendValidator.validateUserId, FriendController.fetchFriends);
-router.get("/pending", FriendValidator.validateUserId, FriendController.fetchPending);
+router.get("/pending", FriendController.fetchPending);
 
 // Friend request management
 router.post("/request", FriendValidator.validateFriendRequest, FriendController.createFriendRequest);

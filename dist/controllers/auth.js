@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.handleOAuthCallback = exports.initiateGoogleAuth = exports.validateGoogleAuthToken = void 0;
+exports.handleOAuthCallback = exports.initiateGoogleAuth = exports.validateFirebaseAuthToken = void 0;
 const oauth2_1 = require("../config/oauth2");
 const crypto_1 = __importDefault(require("crypto"));
 const googleapis_1 = require("googleapis");
@@ -46,12 +46,12 @@ function checkTokenType(token) {
 // // Example usage
 // const token: string = "your_jwt_token_here"; // Replace with actual token
 // checkTokenType(token);
-const validateGoogleAuthToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const validateFirebaseAuthToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { idToken } = req.body;
     checkTokenType(idToken);
     try {
         // Verify the ID token and extract user information
-        const decodedToken = yield firebase_1.auth.verifyIdToken(idToken);
+        const decodedToken = yield firebase_1.auth.verifyIdToken(idToken, true);
         const uid = decodedToken.uid;
         // Retrieve the user record from Firebase Auth
         const userRecord = yield firebase_1.auth.getUser(uid);
@@ -70,7 +70,7 @@ const validateGoogleAuthToken = (req, res) => __awaiter(void 0, void 0, void 0, 
         return;
     }
 });
-exports.validateGoogleAuthToken = validateGoogleAuthToken;
+exports.validateFirebaseAuthToken = validateFirebaseAuthToken;
 // Step 1: Initiate Google OAuth
 const initiateGoogleAuth = (req, res) => {
     const state = crypto_1.default.randomBytes(32).toString("hex");

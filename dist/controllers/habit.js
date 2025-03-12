@@ -151,13 +151,13 @@ const deleteHabit = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.deleteHabit = deleteHabit;
 /** Fetch habit streaks */
 const fetchHabitStreaks = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { id } = req.params;
-    if (!id) {
+    const { habitId } = req.params;
+    if (!habitId) {
         res.status(400).json({ error: "Habit ID is required" });
         return;
     }
     try {
-        const habitDoc = yield firebase_1.db.collection("habits").doc(id).get();
+        const habitDoc = yield firebase_1.db.collection("habits").doc(habitId).get();
         if (!habitDoc.exists) {
             res.status(404).json({ error: "Habit not found" });
             return;

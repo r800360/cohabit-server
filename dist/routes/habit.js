@@ -42,8 +42,8 @@ const HabitValidator = __importStar(require("../validators/habit"));
 const router = express_1.default.Router();
 // Fetching habits
 router.get("/", HabitValidator.validateEmail, HabitController.getAllHabits);
-router.get("/:id", HabitValidator.validateHabitId, HabitController.getHabitById);
-router.get("/:id/streaks", HabitValidator.validateHabitId, HabitController.fetchHabitStreaks);
+router.get("/:habitId", HabitValidator.validateHabitId, HabitController.getHabitById);
+router.get("/:habitId/streaks", HabitValidator.validateHabitId, HabitController.fetchHabitStreaks);
 // Habit operations
 router.post("/", HabitValidator.validateHabitCreation, HabitController.createHabit);
 router.patch("/:habitId", HabitValidator.validateHabitUpdate, HabitController.updateHabit);

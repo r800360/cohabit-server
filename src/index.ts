@@ -20,7 +20,6 @@ const port = process.env.PORT ?? 5000;
 //app.use(cors()); // Enable CORS for cross-origin requests
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
 
 // Express session setup
 app.use(

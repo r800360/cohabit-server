@@ -9,12 +9,9 @@ async function getUserIdFromToken(token: DecodedIdToken & { email: string }): Pr
 
 /** Get the list of friends for a user */
 export const fetchFriends = async (req: Request, res: Response) => {
-  const { userId } = req.body;
-
-  if (!userId) {
-    res.status(400).json({ error: "User ID is required" });
-    return;
-  }
+  const user = await requireSignedIn(req, res);
+  if (!user) return;
+  const userId = await getUserIdFromToken(user);
 
   try {
     const friends: string[] = [];
@@ -114,6 +111,35 @@ export const createFriendRequest = async (req: Request, res: Response) => {
     return;
   }
 };
+
+export const queryFriendRequest = async (req: Request, res: Response) => {
+  const user = await requireSignedIn(req, res);
+  if (!user) return;
+  const senderId = await getUserIdFromToken(user);
+
+  const { username: receiverId } = req.params;
+
+  if (!senderId || !receiverId) {
+    res.status(400).json({ error: "Sender ID and Receiver ID are required" });
+    return;
+  }
+
+  try {
+    const existingReq = await db.collection("friendRequests")
+      .where("senderId", "==", senderId)
+      .where("receiverId", "==", receiverId)
+      .get();
+
+    if (!existingReq.empty) {
+      res.status(200).json(existingReq.docs[0].data());
+    } else {
+      res.status(404).json({ error: "No such friend request found" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Error querying friend request" });
+    return;
+  }
+}
 
 /** Remove a pending friend request */
 export const removePending = async (req: Request, res: Response) => {

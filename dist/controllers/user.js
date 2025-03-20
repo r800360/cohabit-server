@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteUserByEmail = exports.updateUser = exports.createUser = exports.checkUserExists = exports.fetchUserById = exports.fetchUserByName = exports.fetchUserByEmail = exports.getAllUsers = exports.debugRoute = void 0;
 const firebase_1 = require("../config/firebase");
 const auth_1 = require("../utils/auth");
+const firestore_1 = require("firebase-admin/firestore");
 const debugRoute = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const snapshot = yield firebase_1.db.collection("users").limit(1).get();
@@ -40,10 +41,10 @@ const fetchUserByEmail = (req, res) => __awaiter(void 0, void 0, void 0, functio
     try {
         const snapshot = yield firebase_1.db.collection("users").where("email", "==", email).get();
         if (snapshot.empty) {
-            res.status(404).json(null);
+            res.status(404).json({ error: "User not found" });
             return;
         }
-        const user = snapshot.docs[0].data();
+        const user = yield buildUserProfile(snapshot.docs[0].data(), email);
         res.status(200).json(Object.assign({ id: snapshot.docs[0].id }, user));
         return;
     }
@@ -182,4 +183,12 @@ const deleteUserByEmail = (req, res) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 exports.deleteUserByEmail = deleteUserByEmail;
+const buildUserProfile = (userEntry, email) => __awaiter(void 0, void 0, void 0, function* () {
+    const habitDocs = yield firebase_1.db.collection("habits")
+        .where("email", "==", email)
+        .select(firestore_1.FieldPath.documentId())
+        .get();
+    const habitIds = habitDocs.docs.map((doc) => doc.id);
+    return Object.assign(Object.assign({}, userEntry), { habitList: habitIds });
+});
 //# sourceMappingURL=user.js.map

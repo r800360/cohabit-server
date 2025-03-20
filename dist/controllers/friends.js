@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.cancelFriendRequest = exports.rejectFriendRequest = exports.acceptFriendRequest = exports.fetchPending = exports.removePending = exports.createFriendRequest = exports.removeFriend = exports.fetchFriends = void 0;
+exports.cancelFriendRequest = exports.rejectFriendRequest = exports.acceptFriendRequest = exports.fetchPending = exports.removePending = exports.queryFriendRequest = exports.createFriendRequest = exports.removeFriend = exports.fetchFriends = void 0;
 const firebase_1 = require("../config/firebase");
 const auth_1 = require("../utils/auth");
 function getUserIdFromToken(token) {
@@ -19,11 +19,10 @@ function getUserIdFromToken(token) {
 }
 /** Get the list of friends for a user */
 const fetchFriends = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { userId } = req.body;
-    if (!userId) {
-        res.status(400).json({ error: "User ID is required" });
+    const user = yield (0, auth_1.requireSignedIn)(req, res);
+    if (!user)
         return;
-    }
+    const userId = yield getUserIdFromToken(user);
     try {
         const friends = [];
         const friendSnapshot = yield firebase_1.db.collection("friends")
@@ -112,6 +111,34 @@ const createFriendRequest = (req, res) => __awaiter(void 0, void 0, void 0, func
     }
 });
 exports.createFriendRequest = createFriendRequest;
+const queryFriendRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield (0, auth_1.requireSignedIn)(req, res);
+    if (!user)
+        return;
+    const senderId = yield getUserIdFromToken(user);
+    const { username: receiverId } = req.params;
+    if (!senderId || !receiverId) {
+        res.status(400).json({ error: "Sender ID and Receiver ID are required" });
+        return;
+    }
+    try {
+        const existingReq = yield firebase_1.db.collection("friendRequests")
+            .where("senderId", "==", senderId)
+            .where("receiverId", "==", receiverId)
+            .get();
+        if (!existingReq.empty) {
+            res.status(200).json(existingReq.docs[0].data());
+        }
+        else {
+            res.status(404).json({ error: "No such friend request found" });
+        }
+    }
+    catch (error) {
+        res.status(500).json({ error: "Error querying friend request" });
+        return;
+    }
+});
+exports.queryFriendRequest = queryFriendRequest;
 /** Remove a pending friend request */
 const removePending = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const user = yield (0, auth_1.requireSignedIn)(req, res);

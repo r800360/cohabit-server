@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { db, auth } from "../config/firebase";
 import { requireSignedIn } from "../utils/auth";
+import { DocumentData, FieldPath } from "firebase-admin/firestore";
 
 export const debugRoute = async (req: Request, res: Response) => {
   try {
@@ -29,11 +30,11 @@ export const fetchUserByEmail = async (req: Request, res: Response) => {
   try {
     const snapshot = await db.collection("users").where("email", "==", email).get();
     if (snapshot.empty) {
-      res.status(404).json(null);
+      res.status(404).json({ error: "User not found" });
       return;
     } 
 
-    const user = snapshot.docs[0].data();
+    const user = await buildUserProfile(snapshot.docs[0].data(), email);
     res.status(200).json({ id: snapshot.docs[0].id, ...user });
     return;
   } catch (error) {
@@ -173,4 +174,13 @@ export const deleteUserByEmail = async (req: Request, res: Response) => {
     console.error("Error deleting user:", error);
     return;
   }
+};
+
+const buildUserProfile = async (userEntry: DocumentData, email: string) => {
+  const habitDocs = await db.collection("habits")
+    .where("email", "==", email)
+    .select(FieldPath.documentId())
+    .get();
+  const habitIds = habitDocs.docs.map((doc) => doc.id);
+  return { ...userEntry, habitList: habitIds };
 };

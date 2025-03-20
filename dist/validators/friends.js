@@ -23,7 +23,7 @@ exports.validatePendingRemoval = [
     (0, express_validator_1.param)("username").notEmpty().withMessage("Username is required"),
 ];
 exports.validateAcceptRejectRequest = [
-    (0, express_validator_1.body)("receiverId").notEmpty().withMessage("Receiver ID is required"),
+    (0, express_validator_1.body)("senderId").notEmpty().withMessage("Receiver ID is required"),
 ];
 exports.validateFriendRequestQuery = [
     (0, express_validator_1.param)("username").notEmpty().withMessage("Username is required"),

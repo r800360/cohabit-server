@@ -216,15 +216,16 @@ const checkUserExists = (req, res) => __awaiter(void 0, void 0, void 0, function
 exports.checkUserExists = checkUserExists;
 const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        let { name, email } = req.body;
-        if (!email.endsWith("@ucsd.edu")) {
+        // The following function requires account creation through Firebase first
+        const user = yield (0, auth_1.requireSignedIn)(req, res);
+        if (!user.email.endsWith("@ucsd.edu")) {
             res.status(403).json({ message: "Only UCSD emails allowed" });
             return;
         }
-        const userDoc = firebase_1.db.collection("users").doc(email.split("@")[0]);
-        yield userDoc.create({
-            name,
-            email,
+        const userDoc = firebase_1.db.collection("users").doc(user.email.split("@")[0]);
+        yield userDoc.set({
+            name: userDoc.id, // Placeholder
+            email: user.email,
             friendList: [],
             habitList: [],
             // courseList: [],

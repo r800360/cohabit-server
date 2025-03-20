@@ -25,7 +25,7 @@ export const validatePendingRemoval = [
 ];
 
 export const validateAcceptRejectRequest = [
-  body("receiverId").notEmpty().withMessage("Receiver ID is required"),
+  body("senderId").notEmpty().withMessage("Receiver ID is required"),
 ];
 
 export const validateFriendRequestQuery = [

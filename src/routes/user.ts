@@ -17,7 +17,7 @@ router.get("/profile/:id", UserController.fetchProfileById);
 
 // User operations
 router.get("/", UserController.getAllUsers);
-router.post("/", UserValidator.validateUserCreation, UserController.createUser);
+router.post("/", UserController.createUser);
 router.post("/signup", UserController.createUser);
 router.patch("/", UserController.updateUser);
 router.delete("/", UserController.deleteUserByEmail);

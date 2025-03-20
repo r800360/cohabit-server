@@ -201,8 +201,8 @@ const acceptFriendRequest = (req, res) => __awaiter(void 0, void 0, void 0, func
     const user = yield (0, auth_1.requireSignedIn)(req, res);
     if (!user)
         return;
-    const senderId = yield getUserIdFromToken(user);
-    const { receiverId } = req.body;
+    const receiverId = yield getUserIdFromToken(user);
+    const { senderId } = req.body;
     if (!senderId || !receiverId) {
         res.status(400).json({ error: "Sender ID and Receiver ID are required" });
         return;
@@ -236,8 +236,8 @@ const rejectFriendRequest = (req, res) => __awaiter(void 0, void 0, void 0, func
     const user = yield (0, auth_1.requireSignedIn)(req, res);
     if (!user)
         return;
-    const senderId = yield getUserIdFromToken(user);
-    const { receiverId } = req.body;
+    const receiverId = yield getUserIdFromToken(user);
+    const { senderId } = req.body;
     if (!senderId || !receiverId) {
         res.status(400).json({ error: "Sender ID and Receiver ID are required" });
         return;

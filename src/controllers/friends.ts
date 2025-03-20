@@ -207,8 +207,8 @@ export const fetchPending = async (req: Request, res: Response) => {
 export const acceptFriendRequest = async (req: Request, res: Response) => {
   const user = await requireSignedIn(req, res);
   if (!user) return;
-  const senderId = await getUserIdFromToken(user);
-  const { receiverId } = req.body;
+  const receiverId = await getUserIdFromToken(user);
+  const { senderId } = req.body;
 
   if (!senderId || !receiverId) {
     res.status(400).json({ error: "Sender ID and Receiver ID are required" });
@@ -228,9 +228,7 @@ export const acceptFriendRequest = async (req: Request, res: Response) => {
     }
 
     const requestDoc = requestSnapshot.docs[0];
-
     await requestDoc.ref.update({ status: "accepted" });
-
     await db.collection("friends").add({
       users: [senderId, receiverId],
     });
@@ -247,8 +245,8 @@ export const acceptFriendRequest = async (req: Request, res: Response) => {
 export const rejectFriendRequest = async (req: Request, res: Response) => {
   const user = await requireSignedIn(req, res);
   if (!user) return;
-  const senderId = await getUserIdFromToken(user);
-  const { receiverId } = req.body;
+  const receiverId = await getUserIdFromToken(user);
+  const { senderId } = req.body;
 
   if (!senderId || !receiverId) {
     res.status(400).json({ error: "Sender ID and Receiver ID are required" });

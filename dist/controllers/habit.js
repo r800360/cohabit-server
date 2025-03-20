@@ -9,8 +9,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.markHabitMissed = exports.markHabitComplete = exports.fetchHabitStreaks = exports.deleteHabit = exports.updateHabit = exports.createHabit = exports.getHabitById = exports.getAllHabits = void 0;
+exports.listDeletedHabits = exports.markHabitMissed = exports.markHabitComplete = exports.fetchHabitStreaks = exports.deleteHabit = exports.updateHabit = exports.createHabit = exports.getHabitById = exports.getAllHabits = void 0;
 const firebase_1 = require("../config/firebase");
+const firestore_1 = require("firebase-admin/firestore");
 const auth_1 = require("../utils/auth");
 const getAllHabits = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const token = yield (0, auth_1.requireSignedIn)(req, res);
@@ -67,7 +68,7 @@ const createHabit = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     const user = yield (0, auth_1.requireSignedIn)(req, res);
     if (!user)
         return;
-    const { firebaseId, title, description, startDate, endDate, reminderTime, reminderDays, streaks, privacy } = req.body;
+    const { firebaseId, title, description, startDate, endDate, reminderTime, reminderDays, streaks, privacy, lastModified, } = req.body;
     if (!title) {
         res.status(400).json({ error: "Title are required" });
         return;
@@ -81,6 +82,7 @@ const createHabit = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             startDate: new Date(startDate),
             endDate: new Date(endDate),
             reminderTime: new Date(reminderTime),
+            lastModified: new Date(lastModified),
             reminderDays: reminderDays || [],
             streaks: streaks || [],
             privacy: privacy || "Private",
@@ -90,6 +92,7 @@ const createHabit = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         return;
     }
     catch (error) {
+        console.error(error);
         res.status(500).json({ error: "Error creating habit" });
         return;
     }
@@ -140,6 +143,7 @@ const deleteHabit = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             return;
         }
         yield habitRef.delete();
+        yield firebase_1.db.collection("tombstones").doc(habitId).create({ email: user.email });
         res.status(200).json({ success: true, message: "Habit deleted successfully" });
         return;
     }
@@ -230,4 +234,22 @@ const markHabitMissed = (req, res) => __awaiter(void 0, void 0, void 0, function
     }
 });
 exports.markHabitMissed = markHabitMissed;
+const listDeletedHabits = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield (0, auth_1.requireSignedIn)(req, res);
+    if (!user)
+        return;
+    const { ids } = req.body;
+    try {
+        const tombstones = yield firebase_1.db.collection("tombstones")
+            .where(firestore_1.FieldPath.documentId(), "in", ids)
+            .where("email", "==", user.email)
+            .get();
+        // Response format: { [habitId: string]: number /* UNIX epoch in seconds */ }
+        res.status(200).json(Object.fromEntries(tombstones.docs.map((doc) => ([doc.id, doc.createTime.seconds]))));
+    }
+    catch (error) {
+        res.status(500).json({ error: "Error fetching tombstones from Firebase" });
+    }
+});
+exports.listDeletedHabits = listDeletedHabits;
 //# sourceMappingURL=habit.js.map

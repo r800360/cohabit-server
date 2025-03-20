@@ -30,6 +30,7 @@ export async function requireSignedIn(req: Request, res: Response): Promise<(Dec
     }
     return decoded as DecodedIdToken & { email: string };
   } catch (fail) {
+    console.error(fail);
     res.status(403).json({ error: "Account invalid" });
     return null;
   }

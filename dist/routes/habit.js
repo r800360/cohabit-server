@@ -48,8 +48,9 @@ router.get("/:habitId/streaks", HabitValidator.validateHabitId, HabitController.
 router.post("/", HabitValidator.validateHabitCreation, HabitController.createHabit);
 router.patch("/:habitId", HabitValidator.validateHabitUpdate, HabitController.updateHabit);
 router.delete("/:habitId", HabitValidator.validateHabitDeletion, HabitController.deleteHabit);
+router.post("/deleted", HabitValidator.validateTombstoneQuery, HabitController.listDeletedHabits);
 // Habit completion tracking
-router.post("/complete", HabitValidator.validateHabitId, HabitController.markHabitComplete);
-router.post("/missed", HabitValidator.validateHabitId, HabitController.markHabitMissed);
+router.post("/complete", HabitValidator.validateCompletionReport, HabitController.markHabitComplete);
+router.post("/missed", HabitValidator.validateCompletionReport, HabitController.markHabitMissed);
 exports.default = router;
 //# sourceMappingURL=habit.js.map

@@ -41,6 +41,7 @@ function requireSignedIn(req, res) {
             return decoded;
         }
         catch (fail) {
+            console.error(fail);
             res.status(403).json({ error: "Account invalid" });
             return null;
         }

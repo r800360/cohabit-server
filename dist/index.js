@@ -21,7 +21,6 @@ const port = (_a = process.env.PORT) !== null && _a !== void 0 ? _a : 5000;
 //app.use(cors()); // Enable CORS for cross-origin requests
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
-app.use(express_1.default.json());
 // Express session setup
 app.use((0, express_session_1.default)({
     secret: process.env.CLIENT_SECRET || crypto_1.default.randomBytes(32).toString("hex"),

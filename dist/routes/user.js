@@ -46,7 +46,7 @@ router.get("/name/:name", UserController.fetchUserByName);
 router.get("/:id", UserController.fetchUserById);
 // User operations
 router.get("/", UserController.getAllUsers);
-router.post("/", UserValidator.validateUserCreation, UserController.createUser);
+router.post("/", UserController.createUser);
 router.post("/signup", UserController.createUser);
 router.patch("/", UserController.updateUser);
 router.delete("/", UserController.deleteUserByEmail);

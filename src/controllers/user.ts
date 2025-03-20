@@ -94,16 +94,18 @@ export const checkUserExists = async (req: Request, res: Response) => {
 
 export const createUser = async (req: Request, res: Response) => {
   try {
-    let { name, email } = req.body;
-    if (!email.endsWith("@ucsd.edu")) {
+    // The following function requires account creation through Firebase first
+    const user = await requireSignedIn(req, res);
+
+    if (!user.email.endsWith("@ucsd.edu")) {
       res.status(403).json({ message: "Only UCSD emails allowed" });
       return;
     }
 
-    const userDoc = db.collection("users").doc((email as string).split("@")[0]);
-    await userDoc.create({
-      name,
-      email,
+    const userDoc = db.collection("users").doc((user.email as string).split("@")[0]);
+    await userDoc.set({
+      name: userDoc.id, // Placeholder
+      email: user.email,
       friendList: [],
       habitList: [],
       // courseList: [],

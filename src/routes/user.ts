@@ -28,7 +28,4 @@ router.get("/test-db", UserController.debugRoute);
 router.post("/check", UserValidator.validateEmail, UserController.checkUserExists);
 router.delete("/email", UserValidator.validateEmail, UserController.deleteUserByEmail);
 
-
-router.get("", UserValidator. , UserController.)
-
 export default router;

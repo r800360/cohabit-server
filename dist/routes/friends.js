@@ -41,10 +41,11 @@ const FriendController = __importStar(require("../controllers/friends"));
 const FriendValidator = __importStar(require("../validators/friends"));
 const router = express_1.default.Router();
 // Fetching friends and requests
-router.get("/", FriendValidator.validateUserId, FriendController.fetchFriends);
+router.get("/", FriendController.fetchFriends);
 router.get("/pending", FriendController.fetchPending);
 // Friend request management
 router.post("/request", FriendValidator.validateFriendRequest, FriendController.createFriendRequest);
+router.get("/request/:username", FriendValidator.validateFriendRequestQuery, FriendController.queryFriendRequest);
 router.post("/cancel", FriendValidator.validateFriendRequest, FriendController.cancelFriendRequest);
 router.post("/accept", FriendValidator.validateAcceptRejectRequest, FriendController.acceptFriendRequest);
 router.post("/reject", FriendValidator.validateAcceptRejectRequest, FriendController.rejectFriendRequest);

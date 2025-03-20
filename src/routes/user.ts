@@ -10,9 +10,14 @@ router.get("/email/:email", UserController.fetchUserByEmail);
 router.get("/name/:name", UserController.fetchUserByName);
 router.get("/:id", UserController.fetchUserById);
 
+// Fetch user profile and all details about habits (visible, friends-only)
+router.get("/profile/name/:name", UserController.fetchProfileByName);
+router.get("/profile/email/:email", UserController.fetchProfileByEmail);
+router.get("/profile/:id", UserController.fetchProfileById);
+
 // User operations
 router.get("/", UserController.getAllUsers);
-router.post("/", UserValidator.validateUserCreation, UserController.createUser);
+router.post("/", UserController.createUser);
 router.post("/signup", UserController.createUser);
 router.patch("/", UserController.updateUser);
 router.delete("/", UserController.deleteUserByEmail);
@@ -22,6 +27,5 @@ router.delete("/", UserController.deleteUserByEmail);
 router.get("/test-db", UserController.debugRoute);
 router.post("/check", UserValidator.validateEmail, UserController.checkUserExists);
 router.delete("/email", UserValidator.validateEmail, UserController.deleteUserByEmail);
-
 
 export default router;

@@ -16,7 +16,7 @@ const friends_1 = __importDefault(require("./routes/friends"));
 const habit_1 = __importDefault(require("./routes/habit"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
-const port = (_a = process.env.PORT) !== null && _a !== void 0 ? _a : 5000;
+const port = (_a = process.env.PORT) !== null && _a !== void 0 ? _a : 5500;
 // Middleware
 //app.use(cors()); // Enable CORS for cross-origin requests
 app.use(express_1.default.json());

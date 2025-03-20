@@ -7,7 +7,5 @@ export interface User {
     friendList: string[];
     habitList: Habit[];
     blockedList: string[];
-    // courseList: Course[];
-    // focusGroups: string[];
-  }
+}
   

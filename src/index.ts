@@ -14,7 +14,7 @@ import habitRoutes from "./routes/habit";
 dotenv.config();
 
 const app: Express = express();
-const port = process.env.PORT ?? 5000;
+const port = process.env.PORT ?? 5500;
 
 // Middleware
 //app.use(cors()); // Enable CORS for cross-origin requests

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.validateAcceptRejectRequest = exports.validatePendingRemoval = exports.validateRemoveFriend = exports.validateFriendRequest = exports.validateUserId = void 0;
+exports.validateFriendRequestQuery = exports.validateAcceptRejectRequest = exports.validatePendingRemoval = exports.validateRemoveFriend = exports.validateFriendRequest = exports.validateUserId = void 0;
 const express_validator_1 = require("express-validator");
 exports.validateUserId = [
     (0, express_validator_1.body)("userId").notEmpty().withMessage("User ID is required"),
@@ -23,6 +23,9 @@ exports.validatePendingRemoval = [
     (0, express_validator_1.param)("username").notEmpty().withMessage("Username is required"),
 ];
 exports.validateAcceptRejectRequest = [
-    (0, express_validator_1.body)("receiverId").notEmpty().withMessage("Receiver ID is required"),
+    (0, express_validator_1.body)("senderId").notEmpty().withMessage("Receiver ID is required"),
+];
+exports.validateFriendRequestQuery = [
+    (0, express_validator_1.param)("username").notEmpty().withMessage("Username is required"),
 ];
 //# sourceMappingURL=friends.js.map

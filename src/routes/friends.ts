@@ -20,4 +20,6 @@ router.delete("/:username", FriendValidator.validateRemoveFriend, FriendControll
 router.delete("/request/:username", FriendValidator.validatePendingRemoval, FriendController.removePending);
 router.post("/remove", FriendValidator.validateRemoveFriend, FriendController.removeFriend);
 
+
+
 export default router;

@@ -53,13 +53,51 @@ export const validateFirebaseAuthToken = async (req: Request, res: Response) => 
 
         if (!email) {
             res.status(400).json({ error: "Email not found in user profile" });
+            return;
         }
 
-        // Query Firestore for a user with this email
-        const userDoc = await db.collection("users").where("email", "==", email).get();
+        if (!email.endsWith("@ucsd.edu")) {
+          res.status(403).json({ message: "Only UCSD emails allowed" });
+          return;
+        }
 
-        res.json({ exists: !userDoc.empty });
+
+        // Retrieve the user document from Firestore using the email
+        const userDocRef = db.collection("users").doc(email.split("@")[0]); // Use email prefix as document ID
+        const userDocSnapshot = await userDocRef.get();
+
+        // Check if the document already exists
+        if (userDocSnapshot.exists) {
+            // User already exists
+            res.json({ exists: true });
+        } else {
+            // If user does not exist, create the user in Firestore
+            await userDocRef.set({
+                name: email.split("@")[0], // Placeholder name (use email prefix as a placeholder)
+                email: email,
+                friendList: [],
+                habitList: [],
+                blockedList: [],
+            });
+
+            res.json({ exists: false }); // User was created successfully
+        }
+
         return;
+    
+        // const userDoc = db.collection("users").doc((email as string).split("@")[0]);
+        // await userDoc.set({
+        //   name: userDoc.id, // Placeholder
+        //   email: email,
+        //   friendList: [],
+        //   habitList: [],
+        //   // courseList: [],
+        //   blockedList: [],
+        //   // focusGroups: [],
+        // });
+
+        // res.json({ exists: !userDoc.empty });
+        // return;
 
     } catch (error) {
         console.error("Token validation error:", error);

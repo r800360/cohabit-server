@@ -219,10 +219,31 @@ const acceptFriendRequest = (req, res) => __awaiter(void 0, void 0, void 0, func
         }
         const requestDoc = requestSnapshot.docs[0];
         yield requestDoc.ref.update({ status: "accepted" });
+        // Fetch the user documents for both the sender and the receiver
+        const senderDoc = yield firebase_1.db.collection("users").doc(senderId).get();
+        const receiverDoc = yield firebase_1.db.collection("users").doc(receiverId).get();
+        if (!senderDoc.exists || !receiverDoc.exists) {
+            res.status(404).json({ error: "User not found" });
+            return;
+        }
+        const senderData = senderDoc.data();
+        const receiverData = receiverDoc.data();
+        // Check if the sender is already in the receiver's friendList
+        if ((receiverData === null || receiverData === void 0 ? void 0 : receiverData.friendList) && !receiverData.friendList.includes(senderId)) {
+            yield firebase_1.db.collection("users").doc(receiverId).update({
+                friendList: [...receiverData.friendList, senderId],
+            });
+        }
+        // Check if the receiver is already in the sender's friendList
+        if ((senderData === null || senderData === void 0 ? void 0 : senderData.friendList) && !senderData.friendList.includes(receiverId)) {
+            yield firebase_1.db.collection("users").doc(senderId).update({
+                friendList: [...senderData.friendList, receiverId],
+            });
+        }
         yield firebase_1.db.collection("friends").add({
             users: [senderId, receiverId],
         });
-        res.status(200).json({ message: "Friend request accepted" });
+        res.status(200).json({ message: "Friend request accepted and friendship added" });
         return;
     }
     catch (error) {

@@ -1,7 +1,12 @@
 import { Request, Response } from "express";
 import { db, auth } from "../config/firebase";
+import { DecodedIdToken } from "firebase-admin/lib/auth/token-verifier";
 import { requireSignedIn } from "../utils/auth";
 import { DocumentData, FieldPath } from "firebase-admin/firestore";
+
+async function getUserIdFromToken(token: DecodedIdToken & { email: string }): Promise<string> {
+  return token.email.split("@")[0];
+}
 
 export const debugRoute = async (req: Request, res: Response) => {
   try {
@@ -81,6 +86,8 @@ export const fetchProfileByEmail = async (req: Request, res: Response) => {
   const requester = await requireSignedIn(req, res);
   if (!requester) return;
 
+  const requesterId = await getUserIdFromToken(requester); // Fetch the requester’s ID from the token
+
   const { email } = req.params;
   try {
     // Fetch the target user by email
@@ -94,7 +101,7 @@ export const fetchProfileByEmail = async (req: Request, res: Response) => {
     const targetUserId = snapshot.docs[0].id;
     const friendCount = targetUser.friendList.length || 0;
 
-    const isFriend = targetUser.friendList.includes(requester.email);
+    const isFriend = targetUser.friendList.includes(requesterId);
 
     const habitSnapshot = await db.collection("habits")
       .where("email", "==", targetUser.email)
@@ -124,6 +131,8 @@ export const fetchProfileByName = async (req: Request, res: Response) => {
   const requester = await requireSignedIn(req, res);
   if (!requester) return;
 
+  const requesterId = await getUserIdFromToken(requester); // Fetch the requester’s ID from the token
+
   const { name } = req.params;
   try {
     // Fetch the target user by name
@@ -140,7 +149,7 @@ export const fetchProfileByName = async (req: Request, res: Response) => {
     const friendCount = targetUser.friendList.length || 0;
 
     // Check if the requester is a friend of the target user
-    const isFriend = targetUser.friendList.includes(requester.email);
+    const isFriend = targetUser.friendList.includes(requesterId);
 
     // Fetch habits for the target user with correct visibility
     const habitSnapshot = await db.collection("habits")
@@ -171,6 +180,8 @@ export const fetchProfileById = async (req: Request, res: Response) => {
   const requester = await requireSignedIn(req, res);
   if (!requester) return;
 
+  const requesterId = await getUserIdFromToken(requester); // Fetch the requester’s ID from the token
+
   const { id } = req.params;
   try {
     // Fetch the target user by ID
@@ -183,7 +194,7 @@ export const fetchProfileById = async (req: Request, res: Response) => {
     const targetUser = userDoc.data();
     const friendCount = targetUser?.friendList.length || 0;
 
-    const isFriend = targetUser?.friendList.includes(requester.email);
+    const isFriend = targetUser?.friendList.includes(requesterId);
 
     const habitSnapshot = await db.collection("habits")
       .where("email", "==", targetUser?.email)

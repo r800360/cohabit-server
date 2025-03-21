@@ -13,6 +13,11 @@ exports.deleteUserByEmail = exports.updateUser = exports.createUser = exports.ch
 const firebase_1 = require("../config/firebase");
 const auth_1 = require("../utils/auth");
 const firestore_1 = require("firebase-admin/firestore");
+function getUserIdFromToken(token) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return token.email.split("@")[0];
+    });
+}
 const debugRoute = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const snapshot = yield firebase_1.db.collection("users").limit(1).get();
@@ -94,6 +99,7 @@ const fetchProfileByEmail = (req, res) => __awaiter(void 0, void 0, void 0, func
     const requester = yield (0, auth_1.requireSignedIn)(req, res);
     if (!requester)
         return;
+    const requesterId = yield getUserIdFromToken(requester); // Fetch the requester’s ID from the token
     const { email } = req.params;
     try {
         // Fetch the target user by email
@@ -105,7 +111,7 @@ const fetchProfileByEmail = (req, res) => __awaiter(void 0, void 0, void 0, func
         const targetUser = snapshot.docs[0].data();
         const targetUserId = snapshot.docs[0].id;
         const friendCount = targetUser.friendList.length || 0;
-        const isFriend = targetUser.friendList.includes(requester.email);
+        const isFriend = targetUser.friendList.includes(requesterId);
         const habitSnapshot = yield firebase_1.db.collection("habits")
             .where("email", "==", targetUser.email)
             .where("privacy", "in", isFriend ? ["Public", "Friends-Only"] : ["Public"])
@@ -129,6 +135,7 @@ const fetchProfileByName = (req, res) => __awaiter(void 0, void 0, void 0, funct
     const requester = yield (0, auth_1.requireSignedIn)(req, res);
     if (!requester)
         return;
+    const requesterId = yield getUserIdFromToken(requester); // Fetch the requester’s ID from the token
     const { name } = req.params;
     try {
         // Fetch the target user by name
@@ -142,7 +149,7 @@ const fetchProfileByName = (req, res) => __awaiter(void 0, void 0, void 0, funct
         // Get the number of friends
         const friendCount = targetUser.friendList.length || 0;
         // Check if the requester is a friend of the target user
-        const isFriend = targetUser.friendList.includes(requester.email);
+        const isFriend = targetUser.friendList.includes(requesterId);
         // Fetch habits for the target user with correct visibility
         const habitSnapshot = yield firebase_1.db.collection("habits")
             .where("email", "==", targetUser.email)
@@ -168,6 +175,7 @@ const fetchProfileById = (req, res) => __awaiter(void 0, void 0, void 0, functio
     const requester = yield (0, auth_1.requireSignedIn)(req, res);
     if (!requester)
         return;
+    const requesterId = yield getUserIdFromToken(requester); // Fetch the requester’s ID from the token
     const { id } = req.params;
     try {
         // Fetch the target user by ID
@@ -178,7 +186,7 @@ const fetchProfileById = (req, res) => __awaiter(void 0, void 0, void 0, functio
         }
         const targetUser = userDoc.data();
         const friendCount = (targetUser === null || targetUser === void 0 ? void 0 : targetUser.friendList.length) || 0;
-        const isFriend = targetUser === null || targetUser === void 0 ? void 0 : targetUser.friendList.includes(requester.email);
+        const isFriend = targetUser === null || targetUser === void 0 ? void 0 : targetUser.friendList.includes(requesterId);
         const habitSnapshot = yield firebase_1.db.collection("habits")
             .where("email", "==", targetUser === null || targetUser === void 0 ? void 0 : targetUser.email)
             .where("privacy", "in", isFriend ? ["Public", "Friends-Only"] : ["Public"])

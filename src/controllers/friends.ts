@@ -207,6 +207,7 @@ export const fetchPending = async (req: Request, res: Response) => {
 export const acceptFriendRequest = async (req: Request, res: Response) => {
   const user = await requireSignedIn(req, res);
   if (!user) return;
+  
   const receiverId = await getUserIdFromToken(user);
   const { senderId } = req.body;
 
@@ -229,11 +230,38 @@ export const acceptFriendRequest = async (req: Request, res: Response) => {
 
     const requestDoc = requestSnapshot.docs[0];
     await requestDoc.ref.update({ status: "accepted" });
+
+    // Fetch the user documents for both the sender and the receiver
+    const senderDoc = await db.collection("users").doc(senderId).get();
+    const receiverDoc = await db.collection("users").doc(receiverId).get();
+
+    if (!senderDoc.exists || !receiverDoc.exists) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    const senderData = senderDoc.data();
+    const receiverData = receiverDoc.data();
+
+    // Check if the sender is already in the receiver's friendList
+    if (receiverData?.friendList && !receiverData.friendList.includes(senderId)) {
+      await db.collection("users").doc(receiverId).update({
+        friendList: [...receiverData.friendList, senderId],
+      });
+    }
+
+    // Check if the receiver is already in the sender's friendList
+    if (senderData?.friendList && !senderData.friendList.includes(receiverId)) {
+      await db.collection("users").doc(senderId).update({
+        friendList: [...senderData.friendList, receiverId],
+      });
+    }
+
     await db.collection("friends").add({
       users: [senderId, receiverId],
     });
 
-    res.status(200).json({ message: "Friend request accepted" });
+    res.status(200).json({ message: "Friend request accepted and friendship added" });
     return;
   } catch (error) {
     res.status(500).json({ error: "Error accepting friend request" });

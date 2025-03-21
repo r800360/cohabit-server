@@ -287,9 +287,7 @@ const deleteUserByEmail = (req, res) => __awaiter(void 0, void 0, void 0, functi
             return;
         }
         const userDoc = userSnapshot.docs[0];
-        const firebaseId = userDoc.id;
         yield userDoc.ref.delete();
-        yield firebase_1.auth.deleteUser(firebaseId);
         res.status(200).json({ message: "User deleted successfully" });
         return;
     }

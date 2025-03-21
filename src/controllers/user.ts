@@ -307,10 +307,8 @@ export const deleteUserByEmail = async (req: Request, res: Response) => {
     }
 
     const userDoc = userSnapshot.docs[0];
-    const firebaseId = userDoc.id;
-
     await userDoc.ref.delete();
-    await auth.deleteUser(firebaseId);
+    
 
     res.status(200).json({ message: "User deleted successfully" });
     return;
